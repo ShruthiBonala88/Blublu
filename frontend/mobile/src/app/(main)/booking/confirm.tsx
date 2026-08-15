@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Button, Card, ErrorState, Loading } from '../../../components';
-import { useAuth } from '../../providers/AuthProvider';
+import { useAuth } from '../../../providers/AuthProvider';
 import { bookingsApi } from '../../../services/api/bookingsApi';
 import { tripsApi } from '../../../services/api/tripsApi';
 import { mockPassengerTrips } from '../../../features/passenger/search/mockData';

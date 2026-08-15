@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Button, Card, LocationSelector } from '../../components';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '../../providers/AuthProvider';
 import { DriverDashboardScreen } from '../../features/driver/dashboard/DriverDashboardScreen';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';

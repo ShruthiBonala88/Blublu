@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { UserProfile } from '../app/providers/AuthProvider';
+import { UserProfile } from '../providers/AuthProvider';
 
 const TOKEN_KEY = 'blublu_auth_token';
 const USER_KEY = 'blublu_user_data';

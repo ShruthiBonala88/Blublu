@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppProviders } from './providers/AppProviders';
-import { useAuth } from './providers/AuthProvider';
+import { AppProviders } from '../providers/AppProviders';
+import { useAuth } from '../providers/AuthProvider';
 import { Loading } from '../components/Loading';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});

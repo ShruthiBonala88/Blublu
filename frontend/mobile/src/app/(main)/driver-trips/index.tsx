@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Card, Button, Loading, ErrorState } from '../../../components';
-import { useAuth } from '../../providers/AuthProvider';
+import { useAuth } from '../../../providers/AuthProvider';
 import { driversApi } from '../../../services/api/driversApi';
 import { tripsApi } from '../../../services/api/tripsApi';
 import { Trip } from '../../../types';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Screen, Card, Button, Input, Loading, ErrorState } from '../../../components';
-import { useAuth } from '../../providers/AuthProvider';
+import { useAuth } from '../../../providers/AuthProvider';
 import { driversApi } from '../../../services/api/driversApi';
 import { DriverEarningsSummary, DriverPayout } from '../../../types';
 import { colors } from '../../../theme/colors';

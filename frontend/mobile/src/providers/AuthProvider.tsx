@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { storage } from '../../utils/storage';
-import { apiClient } from '../../services/api/client';
+import { storage } from '../utils/storage';
+import { apiClient } from '../services/api/client';
 
 export type UserRole = 'passenger' | 'driver';
 

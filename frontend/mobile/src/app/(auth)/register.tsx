@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Button, Input, Card } from '../../components';
-import { useAuth, UserRole } from '../providers/AuthProvider';
+import { useAuth, UserRole } from '../../providers/AuthProvider';
 import { usersApi } from '../../services/api/usersApi';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';

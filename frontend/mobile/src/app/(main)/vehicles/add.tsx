@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Input, Button, Card, ErrorState } from '../../../components';
-import { useAuth } from '../../providers/AuthProvider';
+import { useAuth } from '../../../providers/AuthProvider';
 import { vehiclesApi } from '../../../services/api/vehiclesApi';
 import { colors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
