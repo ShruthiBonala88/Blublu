@@ -66,36 +66,38 @@ export const RideCard: React.FC<RideCardProps> = ({
         </View>
       </View>
 
-      {/* Vehicle & Seats Footer */}
-      <View style={styles.cardFooter}>
+      {/* Vehicle Info & Seats Row */}
+      <View style={styles.metaRow}>
         <View style={styles.vehicleBadge}>
-          <Text style={styles.vehicleText}>
+          <Text style={styles.vehicleText} numberOfLines={1}>
             🚘 {trip.vehicleType} • {trip.vehicleModel}
           </Text>
         </View>
 
-        <View style={styles.rightFooter}>
-          <Text
-            style={[
-              styles.seatsText,
-              !hasEnoughSeats && styles.seatsTextUnavailable,
-            ]}
-          >
-            💺 {trip.availableSeats} seat{trip.availableSeats === 1 ? '' : 's'} left
-          </Text>
+        <Text
+          style={[
+            styles.seatsText,
+            !hasEnoughSeats && styles.seatsTextUnavailable,
+          ]}
+        >
+          💺 {trip.availableSeats} seat{trip.availableSeats === 1 ? '' : 's'} left
+        </Text>
+      </View>
 
-          <Button
-            title="View Ride"
-            onPress={() =>
-              router.push({
-                pathname: '/(main)/trip-details/[id]' as any,
-                params: { id: trip.id, passengers: passengerCount.toString() },
-              })
-            }
-            size="sm"
-            disabled={!hasEnoughSeats}
-          />
-        </View>
+      {/* Action Button Row */}
+      <View style={styles.actionRow}>
+        <Button
+          title="View Ride Details"
+          onPress={() =>
+            router.push({
+              pathname: '/(main)/trip-details/[id]' as any,
+              params: { id: trip.id, passengers: passengerCount.toString() },
+            })
+          }
+          size="sm"
+          disabled={!hasEnoughSeats}
+          style={styles.viewBtn}
+        />
       </View>
     </Card>
   );
@@ -119,6 +121,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
   },
   avatar: {
     width: 40,
@@ -137,6 +140,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexWrap: 'wrap',
   },
   driverName: {
     color: colors.text.primary,
@@ -153,6 +157,7 @@ const styles = StyleSheet.create({
   },
   priceGroup: {
     alignItems: 'flex-end',
+    minWidth: 70,
   },
   priceAmount: {
     fontSize: typography.sizes.xl,
@@ -200,28 +205,26 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.medium,
   },
-  cardFooter: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: colors.border.subtle,
     paddingTop: 10,
+    marginBottom: 10,
+    gap: 8,
   },
   vehicleBadge: {
     backgroundColor: colors.background.secondary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: border.radius.sm,
+    flexShrink: 1,
   },
   vehicleText: {
     fontSize: typography.sizes.xs,
     color: colors.text.muted,
-  },
-  rightFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
   },
   seatsText: {
     fontSize: typography.sizes.xs,
@@ -230,5 +233,11 @@ const styles = StyleSheet.create({
   },
   seatsTextUnavailable: {
     color: colors.status.error,
+  },
+  actionRow: {
+    marginTop: 2,
+  },
+  viewBtn: {
+    width: '100%',
   },
 });
