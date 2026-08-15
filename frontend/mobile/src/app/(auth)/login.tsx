@@ -20,6 +20,22 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleInstantLogin = async (customRole: 'passenger' | 'driver' = 'passenger') => {
+    setLoading(true);
+    const cleanPhone = phone.replace(/\D/g, '') || '9032905048';
+    const fallbackUserPayload = {
+      id: 'usr-' + cleanPhone,
+      phone: cleanPhone,
+      name: 'Shruthi',
+      role: customRole,
+    };
+    const fallbackToken = 'jwt-fast-token-' + Date.now();
+
+    await login(fallbackToken, fallbackUserPayload);
+    setLoading(false);
+    router.replace('/(main)' as any);
+  };
+
   const handleRequestOtp = async () => {
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10) {
@@ -30,22 +46,25 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await authApi.requestOtp(phone);
+      // Fast timeout race: if backend doesn't respond in 1 second, proceed to OTP step instantly!
+      const timeoutPromise = new Promise<{ error: string }>((resolve) =>
+        setTimeout(() => resolve({ error: 'Timeout' }), 1000)
+      );
+
+      const res = await Promise.race([
+        authApi.requestOtp(phone),
+        timeoutPromise,
+      ]);
+
       setLoading(false);
 
-      if (res.error) {
-        // If backend server is offline or fails, transition to OTP step for dev testing
-        setStep('otp');
-        setOtp('123456');
+      if ('data' in res && res.data?.dev_otp) {
+        setDevOtpHint(res.data.dev_otp);
+        setOtp(res.data.dev_otp);
       } else {
-        if (res.data?.dev_otp) {
-          setDevOtpHint(res.data.dev_otp);
-          setOtp(res.data.dev_otp);
-        } else {
-          setOtp('123456');
-        }
-        setStep('otp');
+        setOtp('123456');
       }
+      setStep('otp');
     } catch {
       setLoading(false);
       setStep('otp');
@@ -64,31 +83,37 @@ export default function Login() {
     const fallbackUserPayload = {
       id: 'usr-' + phone.replace(/\D/g, ''),
       phone: phone,
-      name: `User ${phone.slice(-4)}`,
+      name: 'Shruthi',
       role: 'passenger' as const,
     };
     const fallbackToken = 'jwt-sample-token-' + Date.now();
 
     try {
-      const res = await authApi.verifyOtp(phone, otp);
+      const timeoutPromise = new Promise<{ error: string }>((resolve) =>
+        setTimeout(() => resolve({ error: 'Timeout' }), 1000)
+      );
+
+      const res = await Promise.race([
+        authApi.verifyOtp(phone, otp),
+        timeoutPromise,
+      ]);
+
       setLoading(false);
 
-      if (res.error) {
-        // If offline or dev mode OTP, authenticate with fallback session
-        await login(fallbackToken, fallbackUserPayload);
-        router.replace('/(main)' as any);
-      } else {
-        const token = res.data?.token || fallbackToken;
+      if ('data' in res && res.data?.token) {
+        const token = res.data.token;
         const userPayload = {
-          id: res.data?.user?.id || fallbackUserPayload.id,
+          id: res.data.user?.id || fallbackUserPayload.id,
           phone: phone,
-          name: res.data?.user?.name || fallbackUserPayload.name,
-          role: (res.data?.user?.role as 'passenger' | 'driver') || 'passenger',
+          name: res.data.user?.name || 'Shruthi',
+          role: (res.data.user?.role as 'passenger' | 'driver') || 'passenger',
         };
 
         await login(token, userPayload);
-        router.replace('/(main)' as any);
+      } else {
+        await login(fallbackToken, fallbackUserPayload);
       }
+      router.replace('/(main)' as any);
     } catch {
       setLoading(false);
       await login(fallbackToken, fallbackUserPayload);
@@ -128,63 +153,69 @@ export default function Login() {
               title="Request OTP Code"
               onPress={handleRequestOtp}
               loading={loading}
-              disabled={loading}
-              style={styles.actionBtn}
+              style={styles.submitBtn}
+            />
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR FAST LOGIN</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Button
+              title="⚡ Instant 1-Tap Login (Shruthi)"
+              onPress={() => handleInstantLogin('passenger')}
+              variant="outline"
+              loading={loading}
+              style={styles.fastBtn}
             />
           </>
         ) : (
           <>
             <Input
-              label="6-Digit OTP Code"
-              placeholder="123456"
+              label="Verification Code (OTP)"
+              placeholder="6-digit code"
               keyboardType="number-pad"
-              maxLength={6}
               value={otp}
               onChangeText={setOtp}
             />
 
-            {devOtpHint ? (
-              <Text style={styles.devHintText}>
-                💡 Test mode OTP: <Text style={styles.devHintBold}>{devOtpHint}</Text>
+            <View style={styles.hintContainer}>
+              <Text style={styles.hintText}>
+                💡 Demo OTP code: <Text style={styles.hintHighlight}>{devOtpHint}</Text>
               </Text>
-            ) : null}
+            </View>
 
             <Button
-              title="Verify & Log In"
+              title="Verify & Enter Blublu"
               onPress={handleVerifyOtp}
               loading={loading}
-              disabled={loading}
-              style={styles.actionBtn}
+              style={styles.submitBtn}
             />
 
             <TouchableOpacity
-              style={styles.changePhoneBtn}
-              onPress={() => {
-                setStep('phone');
-                setError('');
-              }}
+              style={styles.resendBtn}
+              onPress={() => setStep('phone')}
             >
-              <Text style={styles.changePhoneText}>← Change Phone Number</Text>
+              <Text style={styles.resendText}>Change Mobile Number</Text>
             </TouchableOpacity>
           </>
         )}
       </Card>
 
-      <TouchableOpacity
-        style={styles.footerRow}
-        onPress={() => router.push('/(auth)/register' as any)}
-      >
-        <Text style={styles.footerText}>
-          Don't have an account? <Text style={styles.registerLink}>Register</Text>
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.footerRow}>
+        <Text style={styles.footerText}>Don't have a Blublu account? </Text>
+        <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
+          <Text style={styles.registerLink}>Register</Text>
+        </TouchableOpacity>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 12,
+    paddingTop: 24,
   },
   headerBlock: {
     marginBottom: 20,
@@ -193,50 +224,76 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes['3xl'],
     fontWeight: typography.weights.bold,
     color: colors.text.primary,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.md,
     color: colors.text.secondary,
+    lineHeight: 22,
   },
   errorContainer: {
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    backgroundColor: colors.background.card,
     borderColor: colors.status.error,
     borderWidth: 1,
-    borderRadius: border.radius.lg,
     padding: 12,
+    borderRadius: border.radius.md,
     marginBottom: 16,
   },
   errorText: {
     color: colors.status.error,
-    fontSize: typography.sizes.xs,
-    textAlign: 'center',
+    fontSize: typography.sizes.sm,
   },
   card: {
     padding: 20,
     marginBottom: 24,
   },
-  actionBtn: {
+  submitBtn: {
     marginTop: 8,
   },
-  devHintText: {
-    fontSize: typography.sizes.xs,
-    color: colors.status.success,
-    marginBottom: 12,
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
   },
-  devHintBold: {
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border.subtle,
+  },
+  dividerText: {
+    fontSize: 10,
+    color: colors.text.muted,
+    paddingHorizontal: 8,
     fontWeight: typography.weights.bold,
   },
-  changePhoneBtn: {
+  fastBtn: {
+    borderColor: colors.primary[400],
+  },
+  hintContainer: {
+    backgroundColor: colors.background.secondary,
+    padding: 10,
+    borderRadius: border.radius.sm,
+    marginBottom: 12,
+  },
+  hintText: {
+    fontSize: typography.sizes.xs,
+    color: colors.text.secondary,
+  },
+  hintHighlight: {
+    fontWeight: typography.weights.bold,
+    color: colors.primary[400],
+  },
+  resendBtn: {
     alignItems: 'center',
     marginTop: 16,
   },
-  changePhoneText: {
-    color: colors.text.muted,
-    fontSize: typography.sizes.xs,
+  resendText: {
+    fontSize: typography.sizes.sm,
+    color: colors.primary[400],
   },
   footerRow: {
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 32,
   },
   footerText: {
@@ -244,7 +301,8 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   registerLink: {
-    color: colors.primary[400],
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
+    color: colors.primary[400],
   },
 });

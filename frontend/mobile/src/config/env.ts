@@ -21,7 +21,7 @@ const defaultHost = getDevHost();
 
 export const ENV = {
   API_BASE_URL: process.env.EXPO_PUBLIC_API_URL || `http://${defaultHost}:8080`,
-  API_TIMEOUT: 15000,
+  API_TIMEOUT: 3000,
   APP_NAME: 'Blublu',
   VERSION: '1.0.0',
 };
