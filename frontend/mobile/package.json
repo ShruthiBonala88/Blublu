@@ -37,29 +37,5 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
-  "expo": {
-    "install": {
-      "exclude": [
-        "expo-constants",
-        "expo-linking",
-        "expo-router",
-        "expo-splash-screen",
-        "expo-status-bar",
-        "expo-symbols",
-        "expo-system-ui",
-        "expo-web-browser",
-        "react",
-        "react-dom",
-        "react-native",
-        "react-native-reanimated",
-        "react-native-safe-area-context",
-        "react-native-gesture-handler",
-        "react-native-screens",
-        "react-native-web",
-        "@types/react",
-        "typescript"
-      ]
-    }
-  },
   "private": true
 }
