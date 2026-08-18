@@ -166,22 +166,13 @@ This launches:
    cp .env.example .env
    ```
 
-3. Ensure `.env` is configured for local development:
-   ```env
-   PORT=8080
-   DATABASE_URL=postgres://blublu:blublu_dev_password@localhost:5433/blublu?sslmode=disable
-   REDIS_URL=redis://127.0.0.1:6379
-   APP_ENV=development
-   PAYMENT_ENV=test
-   JWT_SECRET=your-super-secret-jwt-key
-   ```
 
-4. Run unit tests to verify system integrity:
+3. Run unit tests to verify system integrity:
    ```bash
    go test ./...
    ```
 
-5. Launch the Go API server:
+4. Launch the Go API server:
    ```bash
    go run ./cmd/server
    ```
