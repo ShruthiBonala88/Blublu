@@ -10,6 +10,7 @@ type Config struct {
 	Port                 string
 	JWTSecret            string
 	AppEnv               string
+	PaymentEnv           string
 	DatabaseURL          string
 	RedisURL             string
 	CORSAllowedOrigins   []string
@@ -25,9 +26,10 @@ type Config struct {
 
 func Load() Config {
 	return Config{
-		Port:      getEnv("PORT", "8080"),
-		JWTSecret: getEnv("JWT_SECRET", "blublu-super-secret-jwt-key-2026"),
-		AppEnv:    getEnv("APP_ENV", "development"),
+		Port:       getEnv("PORT", "8080"),
+		JWTSecret:  getEnv("JWT_SECRET", "blublu-super-secret-jwt-key-2026"),
+		AppEnv:     getEnv("APP_ENV", "development"),
+		PaymentEnv: getEnv("PAYMENT_ENV", "test"),
 		DatabaseURL: getEnv(
 			"DATABASE_URL",
 			"postgres://blublu:blublu_dev_password@localhost:5433/blublu?sslmode=disable",

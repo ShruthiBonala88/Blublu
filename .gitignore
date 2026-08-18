@@ -1,14 +1,39 @@
+# Environment / secrets
 .env
 .env.*
 !.env.example
 
+# Node / React Native / Expo
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Go
+bin/
+*.exe
+
+# Logs
 *.log
 
-bin/
-dist/
-
+# IDE
 .vscode/
 .idea/
 
+# OS
 .DS_Store
 Thumbs.db
+
+# Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/build/

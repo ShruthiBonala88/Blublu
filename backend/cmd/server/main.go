@@ -11,13 +11,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/vikas/blublu/internal/admin"
 	"github.com/vikas/blublu/internal/auth"
 	"github.com/vikas/blublu/internal/bookings"
+	"github.com/vikas/blublu/internal/chat"
 	"github.com/vikas/blublu/internal/config"
 	"github.com/vikas/blublu/internal/database"
 	"github.com/vikas/blublu/internal/drivers"
 	"github.com/vikas/blublu/internal/earnings"
+	"github.com/vikas/blublu/internal/kyc"
 	"github.com/vikas/blublu/internal/maps"
 	"github.com/vikas/blublu/internal/middleware"
 	"github.com/vikas/blublu/internal/notifications"
@@ -25,7 +28,9 @@ import (
 	"github.com/vikas/blublu/internal/payments"
 	"github.com/vikas/blublu/internal/ratelimit"
 	"github.com/vikas/blublu/internal/reviews"
+	"github.com/vikas/blublu/internal/safety"
 	"github.com/vikas/blublu/internal/seats"
+	"github.com/vikas/blublu/internal/tracking"
 	"github.com/vikas/blublu/internal/trips"
 	"github.com/vikas/blublu/internal/users"
 	"github.com/vikas/blublu/internal/vehicles"
@@ -37,6 +42,12 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("ℹ️  Notice: .env file not found, using OS environment variables")
+	} else {
+		fmt.Println("✅ Loaded environment variables from .env")
+	}
+
 	cfg := config.Load()
 	if strings.TrimSpace(cfg.JWTSecret) == "" {
 		cfg.JWTSecret = "blublu-dev-secret-key-32-chars-long"
@@ -59,6 +70,14 @@ func main() {
 	} else {
 		defer db.Close()
 		fmt.Println("✅ PostgreSQL connected successfully")
+	}
+
+	redisClient, err := database.NewRedisClient(cfg.RedisURL)
+	if err != nil {
+		fmt.Printf("⚠️  Notice: Redis offline or connection failed (%v). Running with in-memory rate limiting.\n", err)
+	} else {
+		fmt.Println("✅ Redis connected successfully")
+		_ = redisClient
 	}
 
 	// =========================
@@ -97,6 +116,21 @@ func main() {
 
 	userRepo := users.NewRepository(db)
 	userHandler := users.NewHandler(userRepo)
+
+	authService := auth.NewService(db, jwtService)
+	authHandler := auth.NewAuthHandler(authService, userRepo)
+
+	chatService := chat.NewService(db)
+	chatHandler := chat.NewHandler(chatService)
+
+	trackingService := tracking.NewService(db)
+	trackingHandler := tracking.NewHandler(trackingService)
+
+	safetyService := safety.NewService(db)
+	safetyHandler := safety.NewHandler(safetyService)
+
+	kycService := kyc.NewService(db)
+	kycHandler := kyc.NewHandler(kycService)
 
 	driverRepo := drivers.NewRepository(db)
 	driverHandler := drivers.NewHandler(driverRepo)
@@ -291,6 +325,74 @@ func main() {
 				return
 			}
 			reviewHandler.UpdateReview(w, r, ratingID)
+			return
+		}
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+	})))
+
+	// AUTHENTICATION ENDPOINTS
+	mux.HandleFunc("/api/v1/auth/register", middleware.RequireMethods([]string{http.MethodPost}, rateLimitMiddleware.LoginLimit(authHandler.Register)))
+	mux.HandleFunc("/api/v1/auth/login", middleware.RequireMethods([]string{http.MethodPost}, rateLimitMiddleware.LoginLimit(authHandler.Login)))
+
+	// CHAT ENDPOINTS (AUTHENTICATED)
+	mux.HandleFunc("/api/v1/chat/trips/", rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		// Expected path: /api/v1/chat/trips/{trip_id}/messages
+		if len(parts) == 6 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "chat" && parts[3] == "trips" && parts[5] == "messages" {
+			tripID, err := uuid.Parse(parts[4])
+			if err != nil {
+				http.Error(w, `{"error":"invalid trip_id"}`, http.StatusBadRequest)
+				return
+			}
+			chatHandler.HandleTripMessages(w, r, tripID)
+			return
+		}
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+	})))
+
+	// TRACKING ENDPOINTS (AUTHENTICATED)
+	mux.HandleFunc("/api/v1/tracking/trips/", rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		// Expected path: /api/v1/tracking/trips/{trip_id}/location
+		if len(parts) == 6 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "tracking" && parts[3] == "trips" && parts[5] == "location" {
+			tripID, err := uuid.Parse(parts[4])
+			if err != nil {
+				http.Error(w, `{"error":"invalid trip_id"}`, http.StatusBadRequest)
+				return
+			}
+			trackingHandler.HandleTripLocation(w, r, tripID)
+			return
+		}
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+	})))
+
+	// SAFETY ENDPOINTS (AUTHENTICATED)
+	mux.HandleFunc("/api/v1/safety/sos", middleware.RequireMethods([]string{http.MethodPost}, rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(safetyHandler.TriggerSOS))))
+	mux.HandleFunc("/api/v1/safety/report", middleware.RequireMethods([]string{http.MethodPost}, rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(safetyHandler.SubmitReport))))
+	mux.HandleFunc("/api/v1/safety/incidents", middleware.RequireMethods([]string{http.MethodGet}, rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(safetyHandler.ListIncidents))))
+
+	// KYC ENDPOINTS (AUTHENTICATED)
+	mux.HandleFunc("/api/v1/kyc/submit", middleware.RequireMethods([]string{http.MethodPost}, rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(kycHandler.SubmitKYC))))
+	mux.HandleFunc("/api/v1/kyc/status", middleware.RequireMethods([]string{http.MethodGet}, rateLimitMiddleware.GeneralLimit(authMiddleware.Authenticate(kycHandler.GetKYCStatus))))
+
+	// ADMIN KYC ENDPOINTS (ADMIN ROLE ONLY)
+	mux.HandleFunc("/api/v1/admin/kyc", rateLimitMiddleware.GeneralLimit(adminMiddleware.AuthenticateAdmin(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			kycHandler.AdminListKYC(w, r)
+			return
+		}
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+	})))
+	mux.HandleFunc("/api/v1/admin/kyc/", rateLimitMiddleware.GeneralLimit(adminMiddleware.AuthenticateAdmin(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		// /api/v1/admin/kyc/{id}/review
+		if len(parts) == 6 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "admin" && parts[3] == "kyc" && parts[5] == "review" {
+			subID, err := uuid.Parse(parts[4])
+			if err != nil {
+				http.Error(w, `{"error":"invalid submission_id"}`, http.StatusBadRequest)
+				return
+			}
+			kycHandler.AdminReviewKYC(w, r, subID)
 			return
 		}
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)

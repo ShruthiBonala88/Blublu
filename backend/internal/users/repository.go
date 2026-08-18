@@ -90,3 +90,59 @@ func (r *Repository) Create(
 
 	return user, nil
 }
+
+func (r *Repository) GetByPhone(ctx context.Context, phone string) (*User, error) {
+	if r.db == nil {
+		return nil, fmt.Errorf("database connection unavailable")
+	}
+
+	query := `
+		SELECT
+			id, full_name, phone, email, gender, date_of_birth,
+			profile_photo_url, role, is_phone_verified, is_active, created_at, updated_at
+		FROM users
+		WHERE phone = $1
+	`
+
+	user := &User{}
+	err := r.db.QueryRow(ctx, query, phone).Scan(
+		&user.ID, &user.FullName, &user.Phone, &user.Email, &user.Gender,
+		&user.DateOfBirth, &user.ProfilePhotoURL, &user.Role, &user.IsPhoneVerified,
+		&user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *Repository) GetByID(ctx context.Context, id string) (*User, error) {
+	if r.db == nil {
+		return nil, fmt.Errorf("database connection unavailable")
+	}
+
+	query := `
+		SELECT
+			id, full_name, phone, email, gender, date_of_birth,
+			profile_photo_url, role, is_phone_verified, is_active, created_at, updated_at
+		FROM users
+		WHERE id = $1
+	`
+
+	user := &User{}
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&user.ID, &user.FullName, &user.Phone, &user.Email, &user.Gender,
+		&user.DateOfBirth, &user.ProfilePhotoURL, &user.Role, &user.IsPhoneVerified,
+		&user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, err
+	}
+	return user, nil
+}
