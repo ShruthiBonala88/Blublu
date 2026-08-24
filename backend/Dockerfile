@@ -1,11 +1,14 @@
 # ==========================================
 # Multi-Stage Production Dockerfile for Go
 # ==========================================
-FROM golang:1.24-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
+# Enable automatic toolchain and install build tools
+ENV GOTOOLCHAIN=auto
+ENV CGO_ENABLED=0
+
 RUN apk add --no-cache git ca-certificates tzdata
 
 # Cache Go modules
@@ -16,10 +19,10 @@ RUN go mod download
 COPY . .
 
 # Build statically linked binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/server
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/server
 
 # ==========================================
-# Minimal Distroless / Alpine Runtime
+# Minimal Alpine Runtime
 # ==========================================
 FROM alpine:3.19
 
