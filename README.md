@@ -254,3 +254,5 @@ npm run lint
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](mobile/LICENSE) file for details.
+#   B l u b l u _ f r o n t e n d  
+ 

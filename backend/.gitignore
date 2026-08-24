@@ -1,0 +1,28 @@
+# Binaries and executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+server
+blublu-server
+
+# Environment variables
+.env
+.env.*
+.env*.local
+!.env.example
+
+# OS and editor files
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Test coverage
+*.out
+*.coverprofile

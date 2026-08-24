@@ -104,8 +104,8 @@ func main() {
 	reviewHandler := reviews.NewHandler(reviewRepo, notifService)
 
 	otpRepo := otp.NewRepository(db)
-	devSMSProvider := otp.NewDevSMSProvider()
-	otpHandler := otp.NewHandler(otpRepo, devSMSProvider)
+	smsProvider := otp.CreateSMSProvider()
+	otpHandler := otp.NewHandler(otpRepo, smsProvider)
 
 	bookingRepo := bookings.NewRepository(db)
 	bookingHandler := bookings.NewHandler(bookingRepo, notifService)

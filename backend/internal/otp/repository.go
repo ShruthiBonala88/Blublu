@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,6 +18,130 @@ type Repository struct {
 
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{db: db}
+}
+
+// GetOrCreateUserByPhone finds a user by phone number or creates a new passenger record if not found.
+func (r *Repository) GetOrCreateUserByPhone(ctx context.Context, phone string) (uuid.UUID, error) {
+	phone = strings.TrimSpace(phone)
+	if phone == "" {
+		return uuid.Nil, errors.New("phone number cannot be empty")
+	}
+
+	var userID uuid.UUID
+	err := r.db.QueryRow(ctx, `SELECT id FROM users WHERE phone = $1`, phone).Scan(&userID)
+	if err == nil {
+		return userID, nil
+	}
+
+	// Not found, create user
+	newID := uuid.New()
+	fullName := "User " + phone[max(0, len(phone)-4):]
+	_, err = r.db.Exec(
+		ctx,
+		`INSERT INTO users (id, full_name, phone, role, is_phone_verified, is_active, created_at, updated_at)
+		 VALUES ($1, $2, $3, 'passenger', false, true, NOW(), NOW())
+		 ON CONFLICT (phone) DO UPDATE SET updated_at = NOW() RETURNING id`,
+		newID,
+		fullName,
+		phone,
+	)
+	if err != nil {
+		// Fallback query if conflict or already inserted
+		err = r.db.QueryRow(ctx, `SELECT id FROM users WHERE phone = $1`, phone).Scan(&userID)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("failed to create user for phone %s: %w", phone, err)
+		}
+		return userID, nil
+	}
+
+	return newID, nil
+}
+
+func (r *Repository) CreateOTPByPhone(ctx context.Context, phone, purpose, otpCode string, expiryDuration time.Duration) (*OTPVerification, error) {
+	userID, err := r.GetOrCreateUserByPhone(ctx, phone)
+	if err != nil {
+		return nil, err
+	}
+	return r.CreateOTP(ctx, userID, nil, purpose, otpCode, expiryDuration)
+}
+
+func (r *Repository) VerifyOTPByPhone(ctx context.Context, phone, otpCode, purpose string) (uuid.UUID, error) {
+	var userID uuid.UUID
+	err := r.db.QueryRow(ctx, `SELECT id FROM users WHERE phone = $1`, phone).Scan(&userID)
+	if err != nil {
+		return uuid.Nil, ErrUserNotFound
+	}
+
+	err = r.VerifyOTP(ctx, userID, otpCode, purpose)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	// Mark phone as verified
+	_, _ = r.db.Exec(ctx, `UPDATE users SET is_phone_verified = true, updated_at = NOW() WHERE id = $1`, userID)
+
+	return userID, nil
+}
+
+// GetOrCreateUserByEmail finds a user by email or creates a new record if not found.
+func (r *Repository) GetOrCreateUserByEmail(ctx context.Context, email string) (uuid.UUID, error) {
+	email = strings.TrimSpace(strings.ToLower(email))
+	if email == "" {
+		return uuid.Nil, errors.New("email cannot be empty")
+	}
+
+	var userID uuid.UUID
+	err := r.db.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, email).Scan(&userID)
+	if err == nil {
+		return userID, nil
+	}
+
+	// Not found, create user
+	newID := uuid.New()
+	parts := strings.Split(email, "@")
+	fullName := parts[0]
+	_, err = r.db.Exec(
+		ctx,
+		`INSERT INTO users (id, full_name, email, role, is_phone_verified, is_active, created_at, updated_at)
+		 VALUES ($1, $2, $3, 'passenger', true, true, NOW(), NOW())
+		 ON CONFLICT (email) DO UPDATE SET updated_at = NOW() RETURNING id`,
+		newID,
+		fullName,
+		email,
+	)
+	if err != nil {
+		err = r.db.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, email).Scan(&userID)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("failed to create user for email %s: %w", email, err)
+		}
+		return userID, nil
+	}
+
+	return newID, nil
+}
+
+func (r *Repository) CreateOTPByEmail(ctx context.Context, email, purpose, otpCode string, expiryDuration time.Duration) (*OTPVerification, error) {
+	userID, err := r.GetOrCreateUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	return r.CreateOTP(ctx, userID, nil, purpose, otpCode, expiryDuration)
+}
+
+func (r *Repository) VerifyOTPByEmail(ctx context.Context, email, otpCode, purpose string) (uuid.UUID, error) {
+	email = strings.TrimSpace(strings.ToLower(email))
+	var userID uuid.UUID
+	err := r.db.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, email).Scan(&userID)
+	if err != nil {
+		return uuid.Nil, ErrUserNotFound
+	}
+
+	err = r.VerifyOTP(ctx, userID, otpCode, purpose)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return userID, nil
 }
 
 func (r *Repository) CreateOTP(ctx context.Context, userID uuid.UUID, bookingID *uuid.UUID, purpose, otpCode string, expiryDuration time.Duration) (*OTPVerification, error) {
