@@ -714,6 +714,24 @@ func main() {
 		tripHandler.GetByID(w, r)
 	})
 
+	// ROOT WELCOME ENDPOINT
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+  "service": "Blublu API Server",
+  "status": "online",
+  "version": "1.0.0",
+  "health": "/health",
+  "api": "/api/v1",
+  "message": "Welcome to Blublu Backend API 🚀"
+}`))
+	})
+
 	// HEALTH CHECK
 	mux.HandleFunc("/health", healthHandler)
 
