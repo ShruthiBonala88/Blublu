@@ -9,8 +9,10 @@ import {
   Platform,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useUserStore } from '@/store/userStore';
 
 export default function SplashScreen() {
+  const { isLoggedIn, token } = useUserStore();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.94)).current;
 
@@ -18,7 +20,7 @@ export default function SplashScreen() {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 700,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -29,20 +31,24 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    // Auto-transition to passenger-home after 2.5 seconds
+    // Automatically navigate to Sign In / Create Account if not logged in, or home if logged in
     const timer = setTimeout(() => {
-      handleExplore();
-    }, 2500);
+      if (isLoggedIn && token) {
+        router.replace('/passenger-home');
+      } else {
+        router.replace('/login');
+      }
+    }, 1800);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim]);
-
-  const handleExplore = () => {
-    router.replace('/passenger-home');
-  };
+  }, [fadeAnim, scaleAnim, isLoggedIn, token]);
 
   const handleLogin = () => {
     router.replace('/login');
+  };
+
+  const handleExplore = () => {
+    router.replace('/passenger-home');
   };
 
   return (
@@ -74,13 +80,13 @@ export default function SplashScreen() {
 
         {/* Bottom Actions */}
         <Animated.View style={[styles.bottomContainer, { opacity: fadeAnim }]}>
-          <Pressable style={styles.primaryButton} onPress={handleExplore}>
-            <Text style={styles.primaryButtonText}>Explore Blublu</Text>
+          <Pressable style={styles.primaryButton} onPress={handleLogin}>
+            <Text style={styles.primaryButtonText}>Sign In / Create Account</Text>
             <Text style={styles.arrowIcon}>→</Text>
           </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={handleLogin}>
-            <Text style={styles.secondaryButtonText}>Sign In with Mobile</Text>
+          <Pressable style={styles.secondaryButton} onPress={handleExplore}>
+            <Text style={styles.secondaryButtonText}>Browse as Guest</Text>
           </Pressable>
 
           <Text style={styles.termsNote}>Designed with Apple HIG Aesthetics</Text>
@@ -178,7 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
     borderRadius: 9999,
     width: '100%',
     ...Platform.select({

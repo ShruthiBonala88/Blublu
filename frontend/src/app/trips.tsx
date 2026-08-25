@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,12 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { bookingsApi, Booking } from '@/services/api';
+import { useUserStore } from '@/store/userStore';
 import BottomNavigation from '@/components/BottomNavigation';
 
 export default function TripsScreen() {
@@ -20,6 +24,56 @@ export default function TripsScreen() {
     price?: string;
     seats?: string;
   }>();
+
+  const { userId } = useUserStore();
+  const [loading, setLoading] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const data = await bookingsApi.listByUser(userId);
+      setBookings(data);
+    } catch (err) {
+      console.warn('Fetch bookings error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const handleCancelBooking = (bookingId: string) => {
+    Alert.alert('Cancel Ride', 'Are you sure you want to cancel this carpool reservation?', [
+      { text: 'Keep Ride', style: 'cancel' },
+      {
+        text: 'Cancel Ride',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await bookingsApi.cancel(bookingId);
+            Alert.alert('Ride Cancelled', 'Your carpool reservation has been cancelled.');
+            fetchBookings();
+          } catch (err) {
+            Alert.alert('Error', 'Could not cancel booking.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const activeBooking = bookings[0] || {
+    id: 'BLU-2026-00125',
+    trip_id: 'b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+    from_city: params.from || 'Hyderabad',
+    to_city: params.to || 'Bengaluru',
+    departure_time: params.time || 'Today, 6:30 PM',
+    driver_name: 'Rahul Sharma',
+    total_fare: params.price ? Number(params.price) : 650,
+    booking_status: 'confirmed',
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,14 +103,26 @@ export default function TripsScreen() {
 
         <Pressable
           style={styles.tripCard}
-          onPress={() => router.push('/trip-details')}
+          onPress={() =>
+            router.push({
+              pathname: '/trip-details',
+              params: {
+                tripId: activeBooking.trip_id,
+                from: activeBooking.from_city || 'Hyderabad',
+                to: activeBooking.to_city || 'Bengaluru',
+                price: String(activeBooking.total_fare || 650),
+              },
+            })
+          }
         >
           <View style={styles.statusRow}>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>✓ CONFIRMED</Text>
+            <View style={[styles.statusBadge, activeBooking.booking_status === 'cancelled' && { backgroundColor: 'rgba(255, 59, 48, 0.12)' }]}>
+              <Text style={[styles.statusText, activeBooking.booking_status === 'cancelled' && { color: '#FF3B30' }]}>
+                {activeBooking.booking_status === 'cancelled' ? '✕ CANCELLED' : '✓ CONFIRMED'}
+              </Text>
             </View>
 
-            <Text style={styles.bookingId}>BLU-2026-00125</Text>
+            <Text style={styles.bookingId}>{activeBooking.id}</Text>
           </View>
 
           {/* Route Graphic */}
@@ -69,14 +135,14 @@ export default function TripsScreen() {
 
             <View style={styles.routeInfo}>
               <View>
-                <Text style={styles.city}>{params.from || 'Hyderabad'}</Text>
-                <Text style={styles.time}>{params.time || 'Today, 6:30 PM'}</Text>
+                <Text style={styles.city}>{activeBooking.from_city || 'Hyderabad'}</Text>
+                <Text style={styles.time}>{activeBooking.departure_time || 'Today, 6:30 PM'}</Text>
               </View>
 
               <Text style={styles.duration}>⏱ 5h 30m non-stop</Text>
 
               <View>
-                <Text style={styles.city}>{params.to || 'Bengaluru'}</Text>
+                <Text style={styles.city}>{activeBooking.to_city || 'Bengaluru'}</Text>
                 <Text style={styles.time}>12:00 AM</Text>
               </View>
             </View>
@@ -91,15 +157,46 @@ export default function TripsScreen() {
             </View>
 
             <View style={styles.driverInfo}>
-              <Text style={styles.driverName}>Rahul Sharma</Text>
+              <Text style={styles.driverName}>{activeBooking.driver_name || 'Rahul Sharma'}</Text>
               <Text style={styles.rating}>⭐ 4.9 • Verified Driver</Text>
             </View>
 
-            <Text style={styles.price}>{params.price ? `₹${params.price}` : '₹650'}</Text>
+            <Text style={styles.price}>₹{activeBooking.total_fare || 650}</Text>
           </View>
 
-          <View style={styles.tripButton}>
-            <Text style={styles.tripButtonText}>View Boarding Ticket →</Text>
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            <Pressable
+              style={[styles.tripButton, { flex: 1 }]}
+              onPress={() =>
+                router.push({
+                  pathname: '/confirmation',
+                  params: {
+                    bookingId: activeBooking.id,
+                    from: activeBooking.from_city,
+                    to: activeBooking.to_city,
+                    price: String(activeBooking.total_fare || 650),
+                  },
+                })
+              }
+            >
+              <Text style={styles.tripButtonText}>View Ticket →</Text>
+            </Pressable>
+
+            {activeBooking.booking_status !== 'cancelled' && (
+              <Pressable
+                style={{
+                  backgroundColor: 'rgba(255, 59, 48, 0.08)',
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 9999,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                onPress={() => handleCancelBooking(activeBooking.id)}
+              >
+                <Text style={{ color: '#FF3B30', fontWeight: '700', fontSize: 13 }}>Cancel</Text>
+              </Pressable>
+            )}
           </View>
         </Pressable>
 
@@ -135,8 +232,8 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 20,
-    paddingBottom: 40,
-    maxWidth: 480,
+    paddingBottom: 100,
+    maxWidth: 600,
     alignSelf: 'center',
     width: '100%',
   },

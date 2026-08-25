@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,34 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { tripsApi, Trip } from '@/services/api';
 
 export default function SearchResultsScreen() {
+  const searchParams = useLocalSearchParams<{ from?: string; to?: string }>();
+  const from = searchParams.from || 'Hyderabad';
+  const to = searchParams.to || 'Bengaluru';
+
+  const [loading, setLoading] = useState(false);
+  const [trips, setTrips] = useState<Trip[]>([]);
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        setLoading(true);
+        const data = await tripsApi.search({ origin: from, destination: to });
+        setTrips(data);
+      } catch (err) {
+        console.warn('Search results error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrips();
+  }, [from, to]);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -23,65 +47,62 @@ export default function SearchResultsScreen() {
           </Pressable>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Hyderabad → Bengaluru</Text>
+            <Text style={styles.headerTitle}>{from} → {to}</Text>
             <Text style={styles.headerSubtitle}>Today • 1 passenger • Direct</Text>
           </View>
         </View>
 
         <View style={styles.filterRow}>
-          <Text style={styles.resultText}>3 carpools available</Text>
+          <Text style={styles.resultText}>{trips.length} carpools available</Text>
           <Pressable style={styles.filterBtn}>
             <Text style={styles.filterBtnText}>⚡ Instant Booking</Text>
           </Pressable>
         </View>
 
-        <RideCard
-          depTime="06:30 AM"
-          arrTime="12:00 PM"
-          duration="5h 30m"
-          from="Hyderabad (Gachibowli)"
-          to="Bengaluru (Silk Board)"
-          driver="Rahul Sharma"
-          rating="4.9"
-          tripsCount="128 rides"
-          price="₹650"
-          seats="2 seats left"
-          carModel="Toyota Innova • White"
-          isInstant={true}
-          maxTwo={true}
-        />
-
-        <RideCard
-          depTime="08:00 AM"
-          arrTime="01:45 PM"
-          duration="5h 45m"
-          from="Hyderabad (LB Nagar)"
-          to="Bengaluru (Hebbal)"
-          driver="Arjun Reddy"
-          rating="4.8"
-          tripsCount="86 rides"
-          price="₹580"
-          seats="3 seats left"
-          carModel="Hyundai Creta • Silver"
-          isInstant={true}
-          maxTwo={false}
-        />
-
-        <RideCard
-          depTime="09:30 AM"
-          arrTime="03:15 PM"
-          duration="5h 45m"
-          from="Hyderabad (Secunderabad)"
-          to="Bengaluru (Electronic City)"
-          driver="Kiran Kumar"
-          rating="4.7"
-          tripsCount="42 rides"
-          price="₹620"
-          seats="1 seat left"
-          carModel="Honda City • Grey"
-          isInstant={false}
-          maxTwo={true}
-        />
+        {loading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#0071E3" />
+            <Text style={{ marginTop: 12, color: '#86868B', fontSize: 13 }}>Finding best verified carpools...</Text>
+          </View>
+        ) : (
+          trips.map((t, idx) => {
+            const depTime = t.departure_time ? new Date(t.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '06:30 AM';
+            return (
+              <Pressable
+                key={t.id || idx}
+                onPress={() =>
+                  router.push({
+                    pathname: '/trip-details',
+                    params: {
+                      tripId: t.id,
+                      from: t.origin_name || from,
+                      to: t.destination_name || to,
+                      price: String(t.price_per_seat || 650),
+                      driver: t.driver_name || 'Rahul Sharma',
+                      departure: depTime,
+                    },
+                  })
+                }
+              >
+                <RideCard
+                  depTime={depTime}
+                  arrTime="12:00 PM"
+                  duration="5h 30m"
+                  from={t.origin_name || from}
+                  to={t.destination_name || to}
+                  driver={t.driver_name || 'Rahul Sharma'}
+                  rating={t.driver_rating || '4.9'}
+                  tripsCount="128 rides"
+                  price={`₹${t.price_per_seat || 650}`}
+                  seats={`${t.available_seats || 3} seats left`}
+                  carModel="Hyundai Creta • White"
+                  isInstant={true}
+                  maxTwo={true}
+                />
+              </Pressable>
+            );
+          })
+        )}
       </ScrollView>
     </SafeAreaView>
   );

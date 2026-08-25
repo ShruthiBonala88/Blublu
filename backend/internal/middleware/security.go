@@ -116,8 +116,13 @@ func (s *SecurityMiddleware) CORS(next http.Handler) http.Handler {
 }
 
 func (s *SecurityMiddleware) isOriginAllowed(origin string) bool {
+	if strings.EqualFold(s.cfg.AppEnv, "development") || s.cfg.AppEnv == "" {
+		if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") || strings.HasPrefix(origin, "http://172.") || strings.HasPrefix(origin, "http://192.168.") || strings.HasPrefix(origin, "http://10.") {
+			return true
+		}
+	}
 	for _, allowed := range s.cfg.CORSAllowedOrigins {
-		if strings.EqualFold(allowed, origin) {
+		if allowed == "*" || strings.EqualFold(allowed, origin) {
 			return true
 		}
 	}

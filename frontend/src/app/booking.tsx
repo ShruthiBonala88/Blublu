@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,22 +7,49 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { bookingsApi } from '@/services/api';
 
 export default function BookingScreen() {
   const params = useLocalSearchParams();
+  const tripId = (params.tripId as string) || 'b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
+  const from = (params.from as string) || 'Hyderabad';
+  const to = (params.to as string) || 'Bengaluru';
   const seatLabel = (params.seatLabel as string) || (params.seat as string) || '1A';
   const price = (params.price as string) || '650';
 
-  const handleConfirm = () => {
-    router.push({
-      pathname: '/confirmation',
-      params: {
-        seat: seatLabel,
-        price,
-      },
-    });
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    try {
+      setLoading(true);
+      const booking = await bookingsApi.create({
+        trip_id: tripId,
+        seats_booked: 1,
+        pickup_point: `${from} - Central Junction`,
+        drop_point: `${to} - Tech Hub`,
+      });
+
+      router.push({
+        pathname: '/confirmation',
+        params: {
+          bookingId: booking.id,
+          tripId,
+          from,
+          to,
+          seat: seatLabel,
+          price,
+        },
+      });
+    } catch (err: any) {
+      console.error('Booking failed:', err);
+      Alert.alert('Booking Error', err?.response?.data?.error || 'Unable to create booking on backend server.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,63 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useUserStore } from '@/store/userStore';
+import { notificationsApi, NotificationItem } from '@/services/api';
 import BottomNavigation from '@/components/BottomNavigation';
 
 export default function NotificationsScreen() {
+  const { userId } = useUserStore();
+  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  const fetchNotifs = async () => {
+    try {
+      setLoading(true);
+      const data = await notificationsApi.listByUser(userId);
+      setNotifications(data);
+    } catch (err) {
+      console.warn('Fetch notifications error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifs();
+  }, [userId]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsApi.markAllAsRead(userId);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      Alert.alert('Notifications', 'All notifications marked as read.');
+    } catch (e) {
+      //
+    }
+  };
+
+  const handleReadSingle = async (notifId: string) => {
+    try {
+      await notificationsApi.markAsRead(userId, notifId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notifId ? { ...n, is_read: true } : n))
+      );
+    } catch (e) {
+      //
+    }
+  };
+
+  const getIconForType = (type: string, title: string) => {
+    if (title.toLowerCase().includes('booking')) return '✓';
+    if (title.toLowerCase().includes('driver')) return '🚗';
+    if (title.toLowerCase().includes('departure')) return '⏰';
+    return '🔔';
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -26,48 +78,35 @@ export default function NotificationsScreen() {
 
           <Text style={styles.headerTitle}>Notifications</Text>
 
-          <View style={{ width: 40 }} />
+          <Pressable onPress={handleMarkAllRead}>
+            <Text style={{ fontSize: 13, color: '#0071E3', fontWeight: '700' }}>Mark all</Text>
+          </Pressable>
         </View>
 
-        {/* Notifications list */}
-        <NotificationCard
-          icon="✓"
-          title="Booking Confirmed"
-          message="Your Hyderabad → Bengaluru seat (1A) has been confirmed."
-          time="Just now"
-          type="success"
-        />
-
-        <NotificationCard
-          icon="🚗"
-          title="Driver Assigned"
-          message="Rahul Sharma (⭐ 4.9) will be your driver for today's ride."
-          time="10 min ago"
-          type="info"
-        />
-
-        <NotificationCard
-          icon="⏰"
-          title="Upcoming Departure"
-          message="Your carpool departs today at 6:30 PM from Gachibowli."
-          time="1 hour ago"
-          type="warning"
-        />
-
-        <NotificationCard
-          icon="🎉"
-          title="Welcome to BLUBLU India"
-          message="Discover verified routes and save up to 70% on travel."
-          time="Yesterday"
-          type="info"
-        />
+        {loading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color="#0071E3" />
+          </View>
+        ) : notifications.length > 0 ? (
+          notifications.map((item) => (
+            <Pressable key={item.id} onPress={() => handleReadSingle(item.id)}>
+              <NotificationCard
+                icon={getIconForType(item.type, item.title)}
+                title={item.title}
+                message={item.message}
+                time={item.time || 'Recently'}
+                type={item.type || 'info'}
+              />
+            </Pressable>
+          ))
+        ) : null}
 
         {/* Empty-style footer */}
         <View style={styles.footer}>
           <Text style={styles.footerIcon}>🔔</Text>
           <Text style={styles.footerTitle}>You{"'"}re all caught up</Text>
           <Text style={styles.footerText}>
-            New trip alerts and payment notifications will appear here.
+            New trip alerts and payment notifications from Blublu server will appear here.
           </Text>
         </View>
       </ScrollView>
@@ -131,8 +170,8 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 20,
-    paddingBottom: 40,
-    maxWidth: 480,
+    paddingBottom: 100,
+    maxWidth: 600,
     alignSelf: 'center',
     width: '100%',
   },

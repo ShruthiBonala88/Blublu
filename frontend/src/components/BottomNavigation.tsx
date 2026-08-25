@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { router, usePathname } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
 
   const isSearchActive =
     pathname === '/passenger-home' || pathname === '/search' || pathname === '/';
@@ -14,7 +16,7 @@ export default function BottomNavigation() {
     pathname === '/profile' || pathname === '/edit-profile' || pathname === '/vehicles' || pathname === '/settings';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 8) }]}>
       {/* Search */}
       <Pressable
         style={styles.navItem}

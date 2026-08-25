@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
+import { tripsApi } from '@/services/api';
 import BottomNavigation from '@/components/BottomNavigation';
 
 export default function CreateTripScreen() {
@@ -26,27 +27,47 @@ export default function CreateTripScreen() {
   const [seats, setSeats] = useState('3');
   const [isInstant, setIsInstant] = useState(true);
   const [maxTwoBack, setMaxTwoBack] = useState(true);
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  const handleCreateTrip = () => {
+  const handleCreateTrip = async () => {
     if (!from || !to || !date || !time || !price) {
       Alert.alert('Incomplete details', 'Please fill in all route and price details.');
       return;
     }
 
-    Alert.alert(
-      'Ride Published! 🚗',
-      `Your BLUBLU carpool from ${from} to ${to} for ₹${price}/seat is live. Passengers can now book seats.`,
-      [
-        {
-          text: 'View My Trips',
-          onPress: () =>
-            router.push({
-              pathname: '/trips',
-              params: { from, to, date, time, price, seats },
-            }),
-        },
-      ]
-    );
+    try {
+      setIsPublishing(true);
+      const createdTrip = await tripsApi.create({
+        origin: from,
+        destination: to,
+        origin_name: from,
+        destination_name: to,
+        price_per_seat: Number(price) || 650,
+        total_seats: Number(seats) || 3,
+        departure_time: new Date(Date.now() + 3600 * 1000 * 4).toISOString(),
+        notes: `Instant booking: ${isInstant ? 'Yes' : 'No'}, Max 2 back: ${maxTwoBack ? 'Yes' : 'No'}`,
+      });
+
+      Alert.alert(
+        'Ride Published! 🚗',
+        `Your BLUBLU carpool from ${from} to ${to} for ₹${price}/seat is live on backend server. Passengers can now discover and book seats.`,
+        [
+          {
+            text: 'View Driver Dashboard',
+            onPress: () =>
+              router.push({
+                pathname: '/driver-trips',
+                params: { tripId: createdTrip.id, from, to, date, time, price, seats },
+              }),
+          },
+        ]
+      );
+    } catch (err: any) {
+      console.error('Publish trip failed:', err);
+      Alert.alert('Publishing Error', err?.response?.data?.error || 'Unable to publish trip to backend server.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (

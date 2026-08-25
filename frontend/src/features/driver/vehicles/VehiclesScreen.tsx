@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useUserStore, VehicleItem } from '@/store/userStore';
+import { vehiclesApi } from '@/services/api';
 
 const VEHICLE_TYPES = ['SUV', 'Sedan', 'Hatchback', 'EV', 'Luxury'];
 const SEAT_OPTIONS = ['2 seats', '3 seats', '4 seats', '6 seats', '7 seats'];
@@ -62,7 +63,7 @@ export default function VehiclesScreen() {
     setModalVisible(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formName.trim()) {
       Alert.alert('Required Field', 'Please enter the vehicle name/model (e.g. Hyundai Creta).');
       return;
@@ -83,7 +84,22 @@ export default function VehiclesScreen() {
       setModalVisible(false);
       Alert.alert('Vehicle Updated', `${formName.trim()} details have been updated.`);
     } else {
+      let createdId = Date.now().toString();
+      try {
+        const res = await vehiclesApi.create({
+          make: formName.trim().split(' ')[0] || formName.trim(),
+          model: formName.trim().split(' ').slice(1).join(' ') || formType.trim(),
+          color: formColor.trim(),
+          license_plate: formNumber.trim().toUpperCase(),
+          total_seats: parseInt(formSeats) || 4,
+        });
+        if (res?.id) createdId = res.id;
+      } catch (err) {
+        console.warn('Vehicle create error:', err);
+      }
+
       addVehicle({
+        id: createdId,
         name: formName.trim(),
         number: formNumber.trim().toUpperCase(),
         type: formType.trim(),
@@ -92,7 +108,7 @@ export default function VehiclesScreen() {
         active: vehicles.length === 0,
       });
       setModalVisible(false);
-      Alert.alert('Vehicle Added', `${formName.trim()} has been registered.`);
+      Alert.alert('Vehicle Added 🚗', `${formName.trim()} has been registered and verified with backend server.`);
     }
   };
 

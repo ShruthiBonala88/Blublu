@@ -9,7 +9,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 type CarType = 'sedan' | 'suv' | 'hatchback';
 type FilterType = 'all' | 'available' | 'selected' | 'booked';
@@ -56,12 +56,18 @@ const CAR_CONFIGS: Record<CarType, { name: string; icon: string; seats: SeatInfo
 };
 
 export default function SeatSelectionScreen() {
+  const params = useLocalSearchParams();
+  const tripId = (params.tripId as string) || 'b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
+  const from = (params.from as string) || 'Hyderabad';
+  const to = (params.to as string) || 'Bengaluru';
+  const priceParam = (params.price as string) || '650';
+
   const [carType, setCarType] = useState<CarType>('sedan');
   const [selectedSeat, setSelectedSeat] = useState<string | null>('F1');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const currentCar = CAR_CONFIGS[carType];
-  const pricePerSeat = 650;
+  const pricePerSeat = Number(priceParam) || 650;
 
   const handleSeatClick = (seat: SeatInfo) => {
     if (seat.isBooked) {
@@ -90,6 +96,9 @@ export default function SeatSelectionScreen() {
     router.push({
       pathname: '/booking',
       params: {
+        tripId,
+        from,
+        to,
         seat: selectedSeat,
         seatLabel: seatDetails?.label || selectedSeat,
         carType: currentCar.name,

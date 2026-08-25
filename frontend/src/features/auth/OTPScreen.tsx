@@ -86,6 +86,14 @@ export default function OTPScreen() {
       const res = await verifyOtp(target, code);
       console.log('OTP Verification Result:', res);
 
+      const store = useUserStore.getState();
+      store.setAuth({
+        token: res?.token || 'jwt-session-token',
+        userId: res?.user_id || store.userId,
+        phone: !isEmail ? destination : store.phone,
+        email: isEmail ? email : store.passengerEmail,
+      });
+
       if (!isEmail) {
         setPhone(destination);
         setPassengerProfile({ phone: destination });
@@ -93,7 +101,12 @@ export default function OTPScreen() {
         setPassengerProfile({ email });
       }
 
-      router.push('/role-selection');
+      // Keep role as passenger by default and navigate to home without automatic role changes
+      if (store.role === 'driver') {
+        router.replace('/driver-trips');
+      } else {
+        router.replace('/passenger-home');
+      }
     } catch (err: any) {
       console.error('Verify OTP failed:', err);
       const message =

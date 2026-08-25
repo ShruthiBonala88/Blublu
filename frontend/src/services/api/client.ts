@@ -1,18 +1,23 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { useUserStore } from '@/store/userStore';
 
 const getBaseURL = () => {
+  // 1. If explicit env variable is set and not an unreachable hardcoded LAN IP when on web
   if (process.env.EXPO_PUBLIC_API_URL) {
+    if (Platform.OS === 'web' && process.env.EXPO_PUBLIC_API_URL.includes('172.')) {
+      return 'http://localhost:8080/api/v1';
+    }
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
-  // 1. On Web Browser
+  // 2. On Web Browser
   if (Platform.OS === 'web') {
     return 'http://localhost:8080/api/v1';
   }
 
-  // 2. On Physical Mobile Device (Expo Go): Dynamically get computer IP from Expo Host URI
+  // 3. On Physical Mobile Device (Expo Go): Dynamically get computer IP from Expo Host URI
   const hostUri =
     Constants.expoConfig?.hostUri ||
     (Constants as any).manifest?.debuggerHost ||
@@ -26,7 +31,7 @@ const getBaseURL = () => {
     }
   }
 
-  // 3. Emulators fallback
+  // 4. Emulators fallback
   return Platform.OS === 'android' ? 'http://10.0.2.2:8080/api/v1' : 'http://localhost:8080/api/v1';
 };
 
@@ -37,5 +42,39 @@ export const api = axios.create({
   },
   timeout: 10000,
 });
+
+// Auto-inject JWT Token from store into Authorization header
+api.interceptors.request.use(
+  (config) => {
+    try {
+      const state = useUserStore.getState();
+      const token = state?.token;
+      const userId = state?.userId;
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      if (userId) {
+        config.headers['X-User-ID'] = userId;
+        if (state.role === 'admin') {
+          config.headers['X-Admin-User-ID'] = userId;
+        }
+      }
+    } catch (e) {
+      // Ignore in non-react environments
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for consistent response data & error logging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.warn(`[API ERROR] ${error?.config?.method?.toUpperCase()} ${error?.config?.url}:`, error?.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 export default api;

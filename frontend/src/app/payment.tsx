@@ -7,21 +7,43 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { paymentsApi } from '@/services/api';
 
 export default function PaymentScreen() {
   const params = useLocalSearchParams();
+  const bookingId = (params.bookingId as string) || `bk-${Date.now()}`;
   const price = (params.price as string) || '650';
   const [method, setMethod] = useState('UPI');
+  const [loading, setLoading] = useState(false);
 
-  const handlePayment = () => {
-    router.push({
-      pathname: '/booking-confirmed',
-      params: {
-        price,
-      },
-    });
+  const handlePayment = async () => {
+    try {
+      setLoading(true);
+      const order = await paymentsApi.createOrder(bookingId);
+      await paymentsApi.verifyPayment({
+        razorpay_order_id: order.order_id,
+        razorpay_payment_id: `pay_${Date.now()}`,
+        razorpay_signature: 'sig_dev_verified',
+      });
+
+      router.push({
+        pathname: '/booking-confirmed',
+        params: {
+          bookingId,
+          price,
+          method,
+        },
+      });
+    } catch (err: any) {
+      console.warn('Payment failed:', err);
+      Alert.alert('Payment Error', err?.response?.data?.error || 'Unable to process payment order.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

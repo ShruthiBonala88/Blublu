@@ -11,6 +11,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 
 export default function ConfirmationScreen() {
   const params = useLocalSearchParams();
+  const bookingId = (params.bookingId as string) || 'BLU-2026-00125';
+  const from = (params.from as string) || 'Hyderabad';
+  const to = (params.to as string) || 'Bengaluru';
   const seat = (params.seat as string) || '1A';
   const price = (params.price as string) || '650';
 
@@ -27,7 +30,7 @@ export default function ConfirmationScreen() {
         </Text>
 
         <Text style={styles.subtitle}>
-          Your ride from Hyderabad to Bengaluru has been successfully reserved.
+          Your ride from {from} to {to} has been successfully reserved.
         </Text>
 
         {/* Ticket Card */}
@@ -35,7 +38,7 @@ export default function ConfirmationScreen() {
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.label}>BOOKING ID</Text>
-              <Text style={styles.bookingId}>BLU-2026-00125</Text>
+              <Text style={styles.bookingId}>{bookingId}</Text>
             </View>
             <View style={styles.verifiedTag}>
               <Text style={styles.verifiedTagText}>✓ Confirmed</Text>
@@ -46,7 +49,7 @@ export default function ConfirmationScreen() {
 
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Route</Text>
-            <Text style={styles.rowValue}>Hyderabad → Bengaluru</Text>
+            <Text style={styles.rowValue}>{from} → {to}</Text>
           </View>
 
           <View style={styles.row}>

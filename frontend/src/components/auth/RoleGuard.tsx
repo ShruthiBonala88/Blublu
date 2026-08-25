@@ -56,7 +56,15 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
           onPress={() => router.push('/role-selection')}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>Switch Role</Text>
+          <Text style={styles.buttonText}>Choose Role Manually</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 10 }]}
+          onPress={() => router.replace('/passenger-home')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.buttonText, { color: '#64748B' }]}>← Stay as Passenger</Text>
         </TouchableOpacity>
       </View>
     </View>

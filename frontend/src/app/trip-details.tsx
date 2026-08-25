@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,14 @@ import {
   Pressable,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { tripsApi } from '@/services/api';
 
 export default function TripDetailsScreen() {
   const params = useLocalSearchParams();
+  const tripId = (params.tripId as string) || 'b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
   const from = (params.from as string) || 'Hyderabad';
   const to = (params.to as string) || 'Bengaluru';
   const departure = (params.departure as string) || '6:30 PM';
@@ -20,6 +23,16 @@ export default function TripDetailsScreen() {
   const duration = (params.duration as string) || '5h 30m';
   const price = (params.price as string) || '650';
   const driver = (params.driver as string) || 'Rahul Sharma';
+
+  const [routeData, setRouteData] = useState<any>(null);
+
+  useEffect(() => {
+    if (tripId) {
+      tripsApi.getRoute(tripId).then((data) => {
+        if (data) setRouteData(data);
+      }).catch(() => {});
+    }
+  }, [tripId]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -157,7 +170,20 @@ export default function TripDetailsScreen() {
 
         <Pressable
           style={styles.bookButton}
-          onPress={() => router.push('/seat-selection')}
+          onPress={() =>
+            router.push({
+              pathname: '/seat-selection',
+              params: {
+                tripId,
+                from,
+                to,
+                price,
+                departure,
+                arrival,
+                driver,
+              },
+            })
+          }
         >
           <Text style={styles.bookButtonText}>Select Seat</Text>
           <Text style={styles.bookButtonArrow}>→</Text>

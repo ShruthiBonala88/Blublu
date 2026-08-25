@@ -10,16 +10,19 @@ import {
   TextInput,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import BottomNavigation from '@/components/BottomNavigation';
 
 export default function PassengerHomeScreen() {
   const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 640 && width < 1024;
+  const isSmallMobile = width < 380;
 
   const [fromLocation, setFromLocation] = useState('Hyderabad');
   const [toLocation, setToLocation] = useState('Bengaluru');
-  const [activeTab, setActiveTab] = useState<'all' | 'intercity' | 'ev' | 'daily'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'intercity' | 'ev' | 'daily' | 'airport'>('all');
 
   const handleSwap = () => {
     const temp = fromLocation;
@@ -38,16 +41,17 @@ export default function PassengerHomeScreen() {
   };
 
   return (
-    <View style={styles.pageContainer}>
+    <SafeAreaView style={styles.pageContainer} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F7" />
 
-      {/* ================= 1. APPLE GLOBAL NAVIGATION BAR (apple.com/in style) ================= */}
+      {/* ================= 1. GLOBAL NAVIGATION BAR ================= */}
       <View style={styles.appleGlobalNav}>
         <View style={styles.appleNavContent}>
           {/* Brand */}
           <Pressable
             style={styles.appleNavBrand}
             onPress={() => router.push('/passenger-home')}
+            hitSlop={8}
           >
             <View style={styles.appleLogoBadge}>
               <Text style={styles.appleLogoIcon}>🚘</Text>
@@ -84,6 +88,7 @@ export default function PassengerHomeScreen() {
             <Pressable
               style={styles.navIconBtn}
               onPress={() => router.push('/notifications')}
+              hitSlop={8}
             >
               <Text style={styles.navIconText}>🔔</Text>
             </Pressable>
@@ -91,28 +96,49 @@ export default function PassengerHomeScreen() {
         </View>
       </View>
 
-
       {/* ================= MAIN CONTENT SCROLLVIEW ================= */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: isDesktop ? 40 : 120 },
+        ]}
       >
-        {/* ================= 3. HERO 1: BLUBLU PRO (Apple Keynote Dark Showcase) ================= */}
-        <View style={styles.heroDarkContainer}>
+        {/* ================= HERO 1: BLUBLU PRO ================= */}
+        <View style={[styles.heroDarkContainer, { paddingVertical: isDesktop ? 56 : 32 }]}>
           <View style={styles.heroDarkContent}>
             <View style={styles.proPillBadge}>
               <Text style={styles.proPillBadgeText}>BLUBLU PRO</Text>
             </View>
 
-            <Text style={styles.heroDarkTitle}>Titanium standard.{'\n'}Zero surge pricing.</Text>
-            <Text style={styles.heroDarkSubtitle}>
+            <Text
+              style={[
+                styles.heroDarkTitle,
+                {
+                  fontSize: isDesktop ? 44 : isTablet ? 34 : isSmallMobile ? 24 : 28,
+                  lineHeight: isDesktop ? 50 : isTablet ? 40 : isSmallMobile ? 30 : 34,
+                },
+              ]}
+            >
+              Titanium standard.{'\n'}Zero surge pricing.
+            </Text>
+            <Text
+              style={[
+                styles.heroDarkSubtitle,
+                {
+                  fontSize: isDesktop ? 16 : isSmallMobile ? 13 : 14,
+                  lineHeight: isDesktop ? 24 : 20,
+                  maxWidth: isDesktop ? 680 : 500,
+                },
+              ]}
+            >
               India{"'"}s premier intercity carpooling network with 100% verified EV fleets and transparent cost splitting.
             </Text>
 
-            {/* Apple Dual CTA Pill Buttons */}
-            <View style={styles.heroDarkCtaRow}>
+            {/* CTA Buttons */}
+            <View style={[styles.heroDarkCtaRow, { flexDirection: isSmallMobile ? 'column' : 'row' }]}>
               <Pressable
-                style={styles.appleBluePill}
+                style={[styles.appleBluePill, isSmallMobile && { width: '100%', justifyContent: 'center' }]}
                 onPress={handleSearchRides}
               >
                 <Text style={styles.appleBluePillText}>Search Verified Rides</Text>
@@ -120,14 +146,14 @@ export default function PassengerHomeScreen() {
               </Pressable>
 
               <Pressable
-                style={styles.appleGlassPill}
+                style={[styles.appleGlassPill, isSmallMobile && { width: '100%', justifyContent: 'center' }]}
                 onPress={() => router.push('/safety')}
               >
                 <Text style={styles.appleGlassPillText}>Learn about Safety ›</Text>
               </Pressable>
             </View>
 
-            {/* ================= INTERACTIVE APPLE GLASS SEARCH DOCK ================= */}
+            {/* ================= SEARCH DOCK ================= */}
             <View style={styles.searchGlassDock}>
               <View style={styles.searchGlassHeader}>
                 <Text style={styles.searchGlassHeaderTitle}>Plan your journey across India</Text>
@@ -154,7 +180,7 @@ export default function PassengerHomeScreen() {
                 </View>
 
                 {/* Swap button */}
-                <Pressable style={styles.swapCircleBtn} onPress={handleSwap}>
+                <Pressable style={styles.swapCircleBtn} onPress={handleSwap} hitSlop={6}>
                   <Text style={styles.swapCircleIcon}>⇅</Text>
                 </Pressable>
 
@@ -173,9 +199,9 @@ export default function PassengerHomeScreen() {
                   </View>
                 </View>
 
-                {/* Search CTA in Dock */}
+                {/* Search CTA */}
                 <Pressable
-                  style={styles.dockSearchBtn}
+                  style={[styles.dockSearchBtn, !isDesktop && { width: '100%', marginTop: 4 }]}
                   onPress={handleSearchRides}
                 >
                   <Text style={styles.dockSearchBtnText}>Find Rides</Text>
@@ -186,28 +212,46 @@ export default function PassengerHomeScreen() {
           </View>
         </View>
 
-        {/* ================= 4. HERO 2: BLUBLU GREEN (Apple Light Showcase) ================= */}
-        <View style={styles.heroLightContainer}>
+        {/* ================= HERO 2: BLUBLU GREEN ================= */}
+        <View style={[styles.heroLightContainer, { paddingVertical: isDesktop ? 48 : 32 }]}>
           <View style={styles.heroLightContent}>
             <View style={styles.greenPillBadge}>
               <Text style={styles.greenPillBadgeText}>🌱 100% ELECTRIC CORRIDOR</Text>
             </View>
-            <Text style={styles.heroLightTitle}>Hello, Blublu Green.</Text>
-            <Text style={styles.heroLightSubtitle}>
+            <Text
+              style={[
+                styles.heroLightTitle,
+                {
+                  fontSize: isDesktop ? 38 : isTablet ? 30 : isSmallMobile ? 22 : 26,
+                  lineHeight: isDesktop ? 44 : isTablet ? 36 : isSmallMobile ? 28 : 32,
+                },
+              ]}
+            >
+              Hello, Blublu Green.
+            </Text>
+            <Text
+              style={[
+                styles.heroLightSubtitle,
+                {
+                  fontSize: isDesktop ? 16 : isSmallMobile ? 13 : 14,
+                  lineHeight: isDesktop ? 24 : 20,
+                },
+              ]}
+            >
               Cut your carbon footprint by up to 80% with verified EV shared rides on high-speed expressways.
             </Text>
 
-            <View style={styles.heroLightCtaRow}>
+            <View style={[styles.heroLightCtaRow, { flexDirection: isSmallMobile ? 'column' : 'row' }]}>
               <Pressable
-                style={styles.appleDarkPill}
+                style={[styles.appleDarkPill, isSmallMobile && { width: '100%', alignItems: 'center' }]}
                 onPress={() => router.push('/search')}
               >
                 <Text style={styles.appleDarkPillText}>Book EV Express</Text>
               </Pressable>
 
               <Pressable
-                style={styles.appleOutlinePill}
-                onPress={() => router.push('/explore')}
+                style={[styles.appleOutlinePill, isSmallMobile && { width: '100%', alignItems: 'center' }]}
+                onPress={() => router.push('/safety')}
               >
                 <Text style={styles.appleOutlinePillText}>View Carbon Savings ›</Text>
               </Pressable>
@@ -215,16 +259,23 @@ export default function PassengerHomeScreen() {
           </View>
         </View>
 
-        {/* ================= 5. APPLE 2x2 BENTO SHOWCASE GRID ================= */}
+        {/* ================= 2x2 BENTO SHOWCASE GRID ================= */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionTitleBlock}>
             <Text style={styles.sectionSuperHeader}>WHY CHOOSE BLUBLU</Text>
-            <Text style={styles.sectionMainTitle}>Engineered for effortless travel.</Text>
+            <Text
+              style={[
+                styles.sectionMainTitle,
+                { fontSize: isDesktop ? 26 : isSmallMobile ? 20 : 22 },
+              ]}
+            >
+              Engineered for effortless travel.
+            </Text>
           </View>
 
-          <View style={[styles.bentoGrid, isDesktop ? styles.bentoGridDesktop : null]}>
+          <View style={[styles.bentoGrid, isDesktop ? styles.bentoGridDesktop : isTablet ? styles.bentoGridTablet : null]}>
             {/* Bento Card 1 */}
-            <View style={styles.bentoCard}>
+            <View style={[styles.bentoCard, isDesktop && styles.bentoCardDesktop, isTablet && styles.bentoCardTablet]}>
               <View style={styles.bentoIconBadge}>
                 <Text style={styles.bentoIcon}>💎</Text>
               </View>
@@ -236,19 +287,19 @@ export default function PassengerHomeScreen() {
             </View>
 
             {/* Bento Card 2 */}
-            <View style={styles.bentoCard}>
+            <View style={[styles.bentoCard, isDesktop && styles.bentoCardDesktop, isTablet && styles.bentoCardTablet]}>
               <View style={[styles.bentoIconBadge, { backgroundColor: 'rgba(52, 199, 89, 0.12)' }]}>
                 <Text style={styles.bentoIcon}>🛡️</Text>
               </View>
               <Text style={styles.bentoCardTitle}>100% Verified Profiles</Text>
               <Text style={styles.bentoCardDesc}>
-                Mandatory Government Aadhaar and Driving License verification for every driver and co-passenger.
+                Mandatory Government ID and Driving License verification for every driver and co-passenger.
               </Text>
               <Text style={[styles.bentoCardLink, { color: '#34C759' }]}>Trust standards ›</Text>
             </View>
 
             {/* Bento Card 3 */}
-            <View style={styles.bentoCard}>
+            <View style={[styles.bentoCard, isDesktop && styles.bentoCardDesktop, isTablet && styles.bentoCardTablet]}>
               <View style={[styles.bentoIconBadge, { backgroundColor: 'rgba(245, 99, 0, 0.12)' }]}>
                 <Text style={styles.bentoIcon}>⚡</Text>
               </View>
@@ -260,7 +311,7 @@ export default function PassengerHomeScreen() {
             </View>
 
             {/* Bento Card 4 */}
-            <View style={styles.bentoCard}>
+            <View style={[styles.bentoCard, isDesktop && styles.bentoCardDesktop, isTablet && styles.bentoCardTablet]}>
               <View style={[styles.bentoIconBadge, { backgroundColor: 'rgba(175, 82, 222, 0.12)' }]}>
                 <Text style={styles.bentoIcon}>👥</Text>
               </View>
@@ -273,47 +324,79 @@ export default function PassengerHomeScreen() {
           </View>
         </View>
 
-        {/* ================= 6. POPULAR INDIAN CORRIDORS ================= */}
+        {/* ================= POPULAR ROUTES ================= */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderFlex}>
-            <View>
+            <View style={styles.sectionTitleBlock}>
               <Text style={styles.sectionSuperHeader}>POPULAR ROUTES</Text>
-              <Text style={styles.sectionMainTitle}>Top daily departures</Text>
+              <Text
+                style={[
+                  styles.sectionMainTitle,
+                  { fontSize: isDesktop ? 26 : isSmallMobile ? 20 : 22 },
+                ]}
+              >
+                Top daily departures
+              </Text>
             </View>
-            <Pressable onPress={() => router.push('/search')}>
-              <Text style={styles.seeAllLink}>Explore all 50+ cities ›</Text>
+            <Pressable
+              onPress={() => router.push('/search')}
+              style={styles.seeAllBtn}
+              hitSlop={8}
+            >
+              <Text style={styles.seeAllLink}>Explore all 50+ ›</Text>
             </Pressable>
           </View>
 
-          {/* Category Tabs */}
-          <View style={styles.categoryTabsRow}>
+          {/* Smooth Horizontal Category Tabs */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryTabsScroll}
+            style={styles.categoryTabsContainer}
+          >
             <Pressable
               style={[styles.categoryTab, activeTab === 'all' && styles.categoryTabActive]}
               onPress={() => setActiveTab('all')}
             >
-              <Text style={[styles.categoryTabText, activeTab === 'all' && styles.categoryTabTextActive]}>All Routes</Text>
+              <Text style={[styles.categoryTabText, activeTab === 'all' && styles.categoryTabTextActive]}>
+                All Routes
+              </Text>
             </Pressable>
             <Pressable
               style={[styles.categoryTab, activeTab === 'intercity' && styles.categoryTabActive]}
               onPress={() => setActiveTab('intercity')}
             >
-              <Text style={[styles.categoryTabText, activeTab === 'intercity' && styles.categoryTabTextActive]}>⚡ Intercity Express</Text>
+              <Text style={[styles.categoryTabText, activeTab === 'intercity' && styles.categoryTabTextActive]}>
+                ⚡ Intercity Express
+              </Text>
             </Pressable>
             <Pressable
               style={[styles.categoryTab, activeTab === 'ev' && styles.categoryTabActive]}
               onPress={() => setActiveTab('ev')}
             >
-              <Text style={[styles.categoryTabText, activeTab === 'ev' && styles.categoryTabTextActive]}>🌱 Green EV</Text>
+              <Text style={[styles.categoryTabText, activeTab === 'ev' && styles.categoryTabTextActive]}>
+                🌱 Green EV
+              </Text>
             </Pressable>
             <Pressable
               style={[styles.categoryTab, activeTab === 'daily' && styles.categoryTabActive]}
               onPress={() => setActiveTab('daily')}
             >
-              <Text style={[styles.categoryTabText, activeTab === 'daily' && styles.categoryTabTextActive]}>🏢 Tech Corridor</Text>
+              <Text style={[styles.categoryTabText, activeTab === 'daily' && styles.categoryTabTextActive]}>
+                🏢 Tech Corridor
+              </Text>
             </Pressable>
-          </View>
+            <Pressable
+              style={[styles.categoryTab, activeTab === 'airport' && styles.categoryTabActive]}
+              onPress={() => setActiveTab('airport')}
+            >
+              <Text style={[styles.categoryTabText, activeTab === 'airport' && styles.categoryTabTextActive]}>
+                ✈️ Airport Connect
+              </Text>
+            </Pressable>
+          </ScrollView>
 
-          <View style={[styles.routesGrid, isDesktop ? styles.routesGridDesktop : null]}>
+          <View style={[styles.routesGrid, isDesktop ? styles.routesGridDesktop : isTablet ? styles.routesGridTablet : null]}>
             <AppleRouteProductCard
               from="Hyderabad"
               to="Bengaluru"
@@ -324,6 +407,8 @@ export default function PassengerHomeScreen() {
               vehicle="Tata Nexon EV"
               seats="2 seats left"
               isEV={true}
+              isDesktop={isDesktop}
+              isTablet={isTablet}
             />
 
             <AppleRouteProductCard
@@ -336,6 +421,8 @@ export default function PassengerHomeScreen() {
               vehicle="Hyundai Creta"
               seats="3 seats left"
               isEV={false}
+              isDesktop={isDesktop}
+              isTablet={isTablet}
             />
 
             <AppleRouteProductCard
@@ -348,6 +435,8 @@ export default function PassengerHomeScreen() {
               vehicle="MG ZS EV"
               seats="2 seats left"
               isEV={true}
+              isDesktop={isDesktop}
+              isTablet={isTablet}
             />
 
             <AppleRouteProductCard
@@ -360,11 +449,13 @@ export default function PassengerHomeScreen() {
               vehicle="Kia EV6"
               seats="1 seat left"
               isEV={true}
+              isDesktop={isDesktop}
+              isTablet={isTablet}
             />
           </View>
         </View>
 
-        {/* ================= 7. APPLE DIRECTORY FOOTER (apple.com/in style) ================= */}
+        {/* ================= DIRECTORY FOOTER ================= */}
         <View style={styles.appleFooter}>
           <View style={styles.footerNoteRow}>
             <Text style={styles.footerNoteText}>
@@ -374,7 +465,7 @@ export default function PassengerHomeScreen() {
 
           <View style={styles.footerDivider} />
 
-          <View style={[styles.footerDirectoryGrid, isDesktop ? styles.footerDirectoryGridDesktop : null]}>
+          <View style={[styles.footerDirectoryGrid, isDesktop ? styles.footerDirectoryGridDesktop : isTablet ? styles.footerDirectoryGridTablet : null]}>
             <View style={styles.footerCol}>
               <Text style={styles.footerColHeader}>Explore & Book</Text>
               <Text style={styles.footerLinkText}>Find Shared Rides</Text>
@@ -427,9 +518,9 @@ export default function PassengerHomeScreen() {
         </View>
       </ScrollView>
 
-      {/* Floating Bottom Bar for mobile devices */}
+      {/* Floating Bottom Bar for mobile / tablet */}
       {!isDesktop && <BottomNavigation />}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -443,6 +534,8 @@ function AppleRouteProductCard({
   vehicle,
   seats,
   isEV,
+  isDesktop,
+  isTablet,
 }: {
   from: string;
   to: string;
@@ -453,10 +546,16 @@ function AppleRouteProductCard({
   vehicle: string;
   seats: string;
   isEV: boolean;
+  isDesktop: boolean;
+  isTablet: boolean;
 }) {
   return (
     <Pressable
-      style={styles.routeCard}
+      style={[
+        styles.routeCard,
+        isDesktop && styles.routeCardDesktop,
+        isTablet && styles.routeCardTablet,
+      ]}
       onPress={() =>
         router.push({
           pathname: '/trip-details',
@@ -471,8 +570,8 @@ function AppleRouteProductCard({
       }
     >
       <View style={styles.routeCardHeader}>
-        <View>
-          <Text style={styles.routeCardCities}>
+        <View style={{ flex: 1, marginRight: 10 }}>
+          <Text style={styles.routeCardCities} numberOfLines={1}>
             {from} <Text style={styles.routeCardArrow}>→</Text> {to}
           </Text>
           <Text style={styles.routeCardTime}>{time}</Text>
@@ -491,14 +590,14 @@ function AppleRouteProductCard({
           <View style={styles.driverAvatar}>
             <Text style={styles.driverAvatarText}>{driver.charAt(0)}</Text>
           </View>
-          <View>
+          <View style={{ flexShrink: 1 }}>
             <View style={styles.driverNameRow}>
-              <Text style={styles.driverNameText}>{driver}</Text>
+              <Text style={styles.driverNameText} numberOfLines={1}>{driver}</Text>
               <Text style={styles.driverRatingText}>★ {rating}</Text>
             </View>
             <View style={styles.vehicleRow}>
               {isEV && <Text style={styles.evBadge}>🌱 EV</Text>}
-              <Text style={styles.vehicleText}>{vehicle}</Text>
+              <Text style={styles.vehicleText} numberOfLines={1}>{vehicle}</Text>
             </View>
           </View>
         </View>
@@ -520,9 +619,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F7',
   },
 
-  /* ================= 1. APPLE GLOBAL NAV ================= */
+  /* ================= 1. GLOBAL NAV ================= */
   appleGlobalNav: {
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5EA',
     zIndex: 100,
@@ -540,7 +639,7 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     width: '100%',
     alignSelf: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
@@ -608,9 +707,9 @@ const styles = StyleSheet.create({
   },
 
   navIconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#F5F5F7',
     alignItems: 'center',
     justifyContent: 'center',
@@ -623,20 +722,17 @@ const styles = StyleSheet.create({
   },
 
   navIconText: {
-    fontSize: 14,
+    fontSize: 15,
   },
-
-
 
   scrollContent: {
     paddingBottom: 40,
   },
 
-  /* ================= 3. HERO 1: BLUBLU PRO (DARK SHOWCASE) ================= */
+  /* ================= HERO 1: BLUBLU PRO ================= */
   heroDarkContainer: {
     backgroundColor: '#000000',
-    paddingVertical: 48,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -650,10 +746,10 @@ const styles = StyleSheet.create({
 
   proPillBadge: {
     backgroundColor: '#2997FF',
-    paddingVertical: 5,
-    paddingHorizontal: 14,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
     borderRadius: 9999,
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   proPillBadgeText: {
@@ -664,32 +760,26 @@ const styles = StyleSheet.create({
   },
 
   heroDarkTitle: {
-    fontSize: 48,
     fontWeight: '900',
     color: '#F5F5F7',
     textAlign: 'center',
-    letterSpacing: -1.5,
-    lineHeight: 52,
-    marginBottom: 14,
+    letterSpacing: -1,
+    marginBottom: 10,
   },
 
   heroDarkSubtitle: {
-    fontSize: 18,
     color: '#A1A1A6',
     textAlign: 'center',
-    maxWidth: 680,
-    lineHeight: 26,
     letterSpacing: -0.2,
-    marginBottom: 28,
+    marginBottom: 22,
   },
 
   heroDarkCtaRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 14,
-    flexWrap: 'wrap',
-    marginBottom: 36,
+    gap: 10,
+    width: '100%',
+    marginBottom: 28,
   },
 
   appleBluePill: {
@@ -698,8 +788,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -711,22 +801,22 @@ const styles = StyleSheet.create({
 
   appleBluePillText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
 
   pillArrow: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
 
   appleGlassPill: {
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 9999,
-    paddingVertical: 14,
-    paddingHorizontal: 26,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
     ...Platform.select({
@@ -737,15 +827,15 @@ const styles = StyleSheet.create({
 
   appleGlassPillText: {
     color: '#2997FF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
 
   /* ================= SEARCH GLASS DOCK ================= */
   searchGlassDock: {
-    backgroundColor: 'rgba(29, 29, 31, 0.88)',
-    borderRadius: 24,
-    padding: 22,
+    backgroundColor: 'rgba(29, 29, 31, 0.92)',
+    borderRadius: 20,
+    padding: 16,
     width: '100%',
     maxWidth: 960,
     borderWidth: 1,
@@ -763,11 +853,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 6,
   },
 
   searchGlassHeaderTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#F5F5F7',
     letterSpacing: -0.2,
@@ -776,10 +868,10 @@ const styles = StyleSheet.create({
   liveIndicatorPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: 'rgba(52, 199, 89, 0.15)',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
     borderRadius: 9999,
   },
 
@@ -789,14 +881,14 @@ const styles = StyleSheet.create({
   },
 
   liveIndicatorText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#34C759',
   },
 
   searchFieldsRow: {
     flexDirection: 'column',
-    gap: 10,
+    gap: 8,
   },
 
   searchFieldsRowDesktop: {
@@ -809,25 +901,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 12,
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
 
   blueDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#0071E3',
   },
 
   greenDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#34C759',
   },
 
@@ -836,7 +928,7 @@ const styles = StyleSheet.create({
   },
 
   searchMicroLabel: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
     color: '#86868B',
     letterSpacing: 0.5,
@@ -844,16 +936,16 @@ const styles = StyleSheet.create({
 
   searchTextInput: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    marginTop: 2,
+    marginTop: 1,
     padding: 0,
   },
 
   swapCircleBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -866,19 +958,19 @@ const styles = StyleSheet.create({
 
   swapCircleIcon: {
     color: '#2997FF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
   },
 
   dockSearchBtn: {
     backgroundColor: '#0071E3',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     ...Platform.select({
       web: { cursor: 'pointer' },
       default: {},
@@ -893,15 +985,14 @@ const styles = StyleSheet.create({
 
   dockSearchBtnArrow: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
 
-  /* ================= 4. HERO 2: BLUBLU GREEN (LIGHT SHOWCASE) ================= */
+  /* ================= HERO 2: GREEN ================= */
   heroLightContainer: {
     backgroundColor: '#FFFFFF',
-    paddingVertical: 56,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5EA',
@@ -916,49 +1007,47 @@ const styles = StyleSheet.create({
 
   greenPillBadge: {
     backgroundColor: 'rgba(52, 199, 89, 0.12)',
-    paddingVertical: 5,
-    paddingHorizontal: 14,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
     borderRadius: 9999,
-    marginBottom: 14,
+    marginBottom: 10,
   },
 
   greenPillBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: '#34C759',
     letterSpacing: 0.5,
   },
 
   heroLightTitle: {
-    fontSize: 44,
     fontWeight: '900',
     color: '#1D1D1F',
     textAlign: 'center',
-    letterSpacing: -1.2,
-    marginBottom: 12,
+    letterSpacing: -1,
+    marginBottom: 8,
   },
 
   heroLightSubtitle: {
-    fontSize: 17,
     color: '#6E6E73',
     textAlign: 'center',
     maxWidth: 620,
-    lineHeight: 25,
     letterSpacing: -0.2,
-    marginBottom: 24,
+    marginBottom: 18,
   },
 
   heroLightCtaRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'center',
+    gap: 10,
+    width: '100%',
   },
 
   appleDarkPill: {
     backgroundColor: '#1D1D1F',
     borderRadius: 9999,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     ...Platform.select({
       web: { cursor: 'pointer' },
       default: {},
@@ -967,15 +1056,15 @@ const styles = StyleSheet.create({
 
   appleDarkPillText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
 
   appleOutlinePill: {
     backgroundColor: 'transparent',
     borderRadius: 9999,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
     borderWidth: 1,
     borderColor: '#D2D2D7',
     ...Platform.select({
@@ -986,55 +1075,61 @@ const styles = StyleSheet.create({
 
   appleOutlinePillText: {
     color: '#0071E3',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
 
-  /* ================= 5. BENTO GRID ================= */
+  /* ================= 2x2 BENTO GRID ================= */
   sectionContainer: {
     maxWidth: 1200,
     width: '100%',
     alignSelf: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 48,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingTop: 32,
+    paddingBottom: 16,
   },
 
   sectionTitleBlock: {
-    marginBottom: 28,
+    marginBottom: 14,
+    flexShrink: 1,
   },
 
   sectionSuperHeader: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: '#0071E3',
     letterSpacing: 0.6,
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   sectionMainTitle: {
-    fontSize: 28,
     fontWeight: '800',
     color: '#1D1D1F',
-    letterSpacing: -0.6,
+    letterSpacing: -0.5,
   },
 
   bentoGrid: {
     flexDirection: 'column',
-    gap: 16,
+    gap: 12,
+  },
+
+  bentoGridTablet: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
 
   bentoGridDesktop: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
 
   bentoCard: {
-    flex: 1,
-    minWidth: 260,
+    width: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 24,
+    borderRadius: 18,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#E5E5EA',
     ...Platform.select({
@@ -1045,68 +1140,87 @@ const styles = StyleSheet.create({
     }),
   },
 
+  bentoCardTablet: {
+    width: '48.5%',
+  },
+
+  bentoCardDesktop: {
+    width: '48.8%',
+  },
+
   bentoIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     backgroundColor: 'rgba(0, 113, 227, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   bentoIcon: {
-    fontSize: 22,
+    fontSize: 19,
   },
 
   bentoCardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: '#1D1D1F',
     letterSpacing: -0.3,
-    marginBottom: 6,
+    marginBottom: 4,
   },
 
   bentoCardDesc: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6E6E73',
-    lineHeight: 19,
-    marginBottom: 16,
+    lineHeight: 18,
+    marginBottom: 12,
   },
 
   bentoCardLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0071E3',
+  },
+
+  /* ================= POPULAR ROUTES ================= */
+  sectionHeaderFlex: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+
+  seeAllBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+
+  seeAllLink: {
     fontSize: 13,
     fontWeight: '700',
     color: '#0071E3',
   },
 
-  /* ================= 6. POPULAR ROUTES ================= */
-  sectionHeaderFlex: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 20,
+  categoryTabsContainer: {
+    marginBottom: 16,
   },
 
-  seeAllLink: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0071E3',
-  },
-
-  categoryTabsRow: {
+  categoryTabsScroll: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 20,
-    flexWrap: 'wrap',
+    paddingVertical: 2,
+    paddingHorizontal: 2,
   },
 
   categoryTab: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E5EA',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderRadius: 9999,
     ...Platform.select({
       web: { cursor: 'pointer' },
@@ -1120,7 +1234,7 @@ const styles = StyleSheet.create({
   },
 
   categoryTabText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#6E6E73',
   },
@@ -1131,20 +1245,26 @@ const styles = StyleSheet.create({
 
   routesGrid: {
     flexDirection: 'column',
-    gap: 14,
+    gap: 12,
+  },
+
+  routesGridTablet: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
 
   routesGridDesktop: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
 
   routeCard: {
-    flex: 1,
-    minWidth: 260,
+    width: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 20,
+    borderRadius: 18,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E5E5EA',
     ...Platform.select({
@@ -1156,6 +1276,14 @@ const styles = StyleSheet.create({
     }),
   },
 
+  routeCardTablet: {
+    width: '48.5%',
+  },
+
+  routeCardDesktop: {
+    width: '48.8%',
+  },
+
   routeCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1163,7 +1291,7 @@ const styles = StyleSheet.create({
   },
 
   routeCardCities: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
     color: '#1D1D1F',
     letterSpacing: -0.3,
@@ -1174,8 +1302,8 @@ const styles = StyleSheet.create({
   },
 
   routeCardTime: {
-    marginTop: 4,
-    fontSize: 12,
+    marginTop: 3,
+    fontSize: 11,
     color: '#86868B',
     fontWeight: '500',
   },
@@ -1185,39 +1313,41 @@ const styles = StyleSheet.create({
   },
 
   routeCardPrice: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: '900',
     color: '#1D1D1F',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
 
   routeCardSeatLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#86868B',
   },
 
   routeCardDivider: {
     height: 1,
     backgroundColor: '#F5F5F7',
-    marginVertical: 14,
+    marginVertical: 12,
   },
 
   routeCardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
 
   driverInfoBlock: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    flex: 1,
   },
 
   driverAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#F5F5F7',
     borderWidth: 1,
     borderColor: '#E5E5EA',
@@ -1226,7 +1356,7 @@ const styles = StyleSheet.create({
   },
 
   driverAvatarText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#1D1D1F',
   },
@@ -1234,11 +1364,11 @@ const styles = StyleSheet.create({
   driverNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
 
   driverNameText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#1D1D1F',
   },
@@ -1253,75 +1383,83 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 2,
+    marginTop: 1,
   },
 
   evBadge: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: '#34C759',
   },
 
   vehicleText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#86868B',
   },
 
   actionCol: {
     alignItems: 'flex-end',
+    flexShrink: 0,
   },
 
   seatsLeftText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: '#34C759',
-    marginBottom: 4,
+    marginBottom: 3,
   },
 
   bookPill: {
     backgroundColor: '#0071E3',
     borderRadius: 9999,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
   },
 
   bookPillText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
 
-  /* ================= 7. APPLE DIRECTORY FOOTER ================= */
+  /* ================= DIRECTORY FOOTER ================= */
   appleFooter: {
     backgroundColor: '#F5F5F7',
     borderTopWidth: 1,
     borderTopColor: '#E5E5EA',
-    paddingVertical: 36,
-    paddingHorizontal: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 16,
     maxWidth: 1200,
     width: '100%',
     alignSelf: 'center',
   },
 
   footerNoteRow: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   footerNoteText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#86868B',
-    lineHeight: 16,
+    lineHeight: 15,
   },
 
   footerDivider: {
     height: 1,
     backgroundColor: '#E5E5EA',
-    marginVertical: 18,
+    marginVertical: 14,
   },
 
   footerDirectoryGrid: {
     flexDirection: 'column',
-    gap: 24,
+    gap: 18,
+  },
+
+  footerDirectoryGridTablet: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 20,
   },
 
   footerDirectoryGridDesktop: {
@@ -1330,20 +1468,20 @@ const styles = StyleSheet.create({
   },
 
   footerCol: {
-    flex: 1,
+    minWidth: 140,
   },
 
   footerColHeader: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#1D1D1F',
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   footerLinkText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6E6E73',
-    marginBottom: 8,
+    marginBottom: 6,
     ...Platform.select({
       web: { cursor: 'pointer' },
       default: {},
@@ -1355,11 +1493,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
 
   footerCopyText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#86868B',
   },
 
@@ -1371,7 +1509,7 @@ const styles = StyleSheet.create({
   },
 
   footerSubLink: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#6E6E73',
     ...Platform.select({
       web: { cursor: 'pointer' },
@@ -1380,7 +1518,7 @@ const styles = StyleSheet.create({
   },
 
   footerDot: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#86868B',
   },
 });

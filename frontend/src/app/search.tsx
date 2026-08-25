@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   ScrollView,
   TextInput,
   Pressable,
+  ActivityIndicator,
   Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { tripsApi, Trip } from '@/services/api';
 
 type Ride = {
   id: string;
@@ -24,54 +26,49 @@ type Ride = {
   seats: string;
 };
 
-const rides: Ride[] = [
-  {
-    id: 'BLU-001',
-    driver: 'Rahul Sharma',
-    rating: '4.9',
-    from: 'Hyderabad',
-    to: 'Bengaluru',
-    departure: '6:30 PM',
-    arrival: '12:00 AM',
-    duration: '5h 30m',
-    price: '650',
-    seats: '2 seats',
-  },
-  {
-    id: 'BLU-002',
-    driver: 'Arjun Reddy',
-    rating: '4.8',
-    from: 'Hyderabad',
-    to: 'Bengaluru',
-    departure: '8:00 PM',
-    arrival: '1:30 AM',
-    duration: '5h 30m',
-    price: '600',
-    seats: '3 seats',
-  },
-  {
-    id: 'BLU-003',
-    driver: 'Vikram Mehta',
-    rating: '4.7',
-    from: 'Hyderabad',
-    to: 'Bengaluru',
-    departure: '9:30 PM',
-    arrival: '3:00 AM',
-    duration: '5h 30m',
-    price: '550',
-    seats: '1 seat',
-  },
-];
-
 export default function SearchScreen() {
-  const [from, setFrom] = useState('Hyderabad');
-  const [to, setTo] = useState('Bengaluru');
+  const searchParams = useLocalSearchParams<{ from?: string; to?: string }>();
+  const [from, setFrom] = useState(searchParams.from || 'Hyderabad');
+  const [to, setTo] = useState(searchParams.to || 'Bengaluru');
   const [date] = useState('Today');
+  const [loading, setLoading] = useState(false);
+  const [ridesList, setRidesList] = useState<Ride[]>([]);
 
-  const filteredRides = rides.filter(
+  const fetchRides = async () => {
+    try {
+      setLoading(true);
+      const trips = await tripsApi.search({ origin: from, destination: to, date });
+      const mapped: Ride[] = trips.map((t: Trip, idx: number) => {
+        const depTime = t.departure_time ? new Date(t.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '06:30 PM';
+        return {
+          id: t.id || `trip-${idx}`,
+          driver: t.driver_name || 'Rahul Sharma',
+          rating: t.driver_rating || '4.9',
+          from: t.origin_name || from,
+          to: t.destination_name || to,
+          departure: depTime,
+          arrival: '12:00 AM',
+          duration: '5h 30m',
+          price: String(t.price_per_seat || 650),
+          seats: `${t.available_seats || 3} seats`,
+        };
+      });
+      setRidesList(mapped);
+    } catch (err) {
+      console.warn('Fetch rides error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRides();
+  }, []);
+
+  const filteredRides = ridesList.filter(
     (ride) =>
-      ride.from.toLowerCase().includes(from.toLowerCase()) &&
-      ride.to.toLowerCase().includes(to.toLowerCase())
+      ride.from.toLowerCase().includes(from.toLowerCase().trim()) &&
+      ride.to.toLowerCase().includes(to.toLowerCase().trim())
   );
 
   return (
@@ -135,9 +132,9 @@ export default function SearchScreen() {
             <Text style={styles.arrow}>›</Text>
           </Pressable>
 
-          <Pressable style={styles.searchButton}>
+          <Pressable style={styles.searchButton} onPress={fetchRides}>
             <Text style={styles.searchButtonText}>
-              Search Rides
+              {loading ? 'Searching Server...' : 'Search Rides'}
             </Text>
           </Pressable>
         </View>
@@ -155,7 +152,13 @@ export default function SearchScreen() {
           </View>
         </View>
 
-        {filteredRides.length > 0 ? (
+        {loading ? (
+          <View style={[styles.emptyCard, { paddingVertical: 40 }]}>
+            <ActivityIndicator size="large" color="#0071E3" />
+            <Text style={[styles.emptyTitle, { marginTop: 16 }]}>Connecting to Blublu Server...</Text>
+            <Text style={styles.emptyText}>Fetching verified carpool routes and available seats</Text>
+          </View>
+        ) : filteredRides.length > 0 ? (
           filteredRides.map((ride) => (
             <RideCard
               key={ride.id}
@@ -187,6 +190,7 @@ function RideCard({ ride }: { ride: Ride }) {
     router.push({
       pathname: '/trip-details',
       params: {
+        tripId: ride.id,
         from: ride.from,
         to: ride.to,
         departure: ride.departure,
@@ -295,8 +299,8 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 20,
-    paddingBottom: 40,
-    maxWidth: 480,
+    paddingBottom: 100,
+    maxWidth: 600,
     alignSelf: 'center',
     width: '100%',
   },

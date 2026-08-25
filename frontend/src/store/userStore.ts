@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export type UserRole = 'passenger' | 'driver' | 'admin';
 
 export interface VehicleInfo {
+  id?: string;
   name: string;
   type: string;
   seats: string;
@@ -24,6 +25,9 @@ export interface UserState {
   role: UserRole;
   phone: string;
   isLoggedIn: boolean;
+  token: string | null;
+  userId: string;
+  driverId: string;
 
   // Passenger profile info
   passengerName: string;
@@ -38,22 +42,34 @@ export interface UserState {
   vehicles: VehicleItem[];
 
   // Actions
+  setAuth: (data: { token?: string; userId?: string; role?: UserRole; phone?: string; email?: string; name?: string }) => void;
+  setToken: (token: string | null) => void;
+  setUserId: (userId: string) => void;
+  setDriverId: (driverId: string) => void;
   setRole: (role: UserRole) => void;
   setPhone: (phone: string) => void;
   setPassengerProfile: (data: Partial<{ name: string; phone: string; email: string }>) => void;
   setDriverProfile: (data: Partial<{ name: string; phone: string; email: string }>) => void;
   setVehicle: (vehicle: Partial<VehicleInfo>) => void;
-  addVehicle: (vehicle: Omit<VehicleItem, 'id' | 'active'> & { active?: boolean }) => void;
+  addVehicle: (vehicle: Omit<VehicleItem, 'id' | 'active'> & { id?: string; active?: boolean }) => void;
   updateVehicle: (id: string, updated: Partial<VehicleItem>) => void;
   deleteVehicle: (id: string) => void;
   setActiveVehicle: (id: string) => void;
   logout: () => void;
 }
 
+// Fixed default UUIDs for reliable standalone development/testing
+const DEFAULT_USER_ID = 'e9a5c556-c2aa-4ff5-b9e7-f7e9dae9c3e1';
+const DEFAULT_DRIVER_ID = 'd8b4b445-b199-4ee4-a8d6-e6d8c9d8b2d0';
+const DEFAULT_VEHICLE_ID = 'c7a3a334-a088-4dd3-97c5-d5c7b8c7a1c9';
+
 export const useUserStore = create<UserState>((set) => ({
   role: 'passenger',
   phone: '+91 98765 43210',
   isLoggedIn: true,
+  token: 'blublu-mock-dev-jwt-token',
+  userId: DEFAULT_USER_ID,
+  driverId: DEFAULT_DRIVER_ID,
 
   passengerName: 'Vaishnavi',
   passengerPhone: '+91 98765 43210',
@@ -64,6 +80,7 @@ export const useUserStore = create<UserState>((set) => ({
   driverEmail: 'driver@blublu.com',
 
   vehicle: {
+    id: DEFAULT_VEHICLE_ID,
     name: 'Hyundai Creta',
     type: 'SUV',
     seats: '4 seats',
@@ -73,7 +90,7 @@ export const useUserStore = create<UserState>((set) => ({
 
   vehicles: [
     {
-      id: '1',
+      id: DEFAULT_VEHICLE_ID,
       name: 'Hyundai Creta',
       number: 'TS 09 AB 1234',
       type: 'SUV',
@@ -82,7 +99,7 @@ export const useUserStore = create<UserState>((set) => ({
       active: true,
     },
     {
-      id: '2',
+      id: 'b6929223-9f77-4cc2-86b4-c4b6a7b6a0b8',
       name: 'Honda City',
       number: 'TS 10 CD 5678',
       type: 'Sedan',
@@ -91,6 +108,23 @@ export const useUserStore = create<UserState>((set) => ({
       active: false,
     },
   ],
+
+  setAuth: (data) =>
+    set((state) => ({
+      isLoggedIn: true,
+      token: data.token !== undefined ? data.token : state.token,
+      userId: data.userId || state.userId,
+      role: data.role || state.role,
+      phone: data.phone || state.phone,
+      passengerPhone: data.phone || state.passengerPhone,
+      driverPhone: data.phone || state.driverPhone,
+      passengerEmail: data.email || state.passengerEmail,
+      passengerName: data.name || state.passengerName,
+    })),
+
+  setToken: (token) => set({ token }),
+  setUserId: (userId) => set({ userId }),
+  setDriverId: (driverId) => set({ driverId }),
 
   setRole: (role) => set({ role }),
   setPhone: (phone) =>
@@ -120,7 +154,7 @@ export const useUserStore = create<UserState>((set) => ({
       const isFirst = state.vehicles.length === 0;
       const shouldBeActive = newVehicle.active ?? isFirst;
       const vehicleItem: VehicleItem = {
-        id: Date.now().toString(),
+        id: newVehicle.id || Date.now().toString(),
         name: newVehicle.name.trim(),
         type: newVehicle.type.trim(),
         seats: newVehicle.seats.trim(),
@@ -137,6 +171,7 @@ export const useUserStore = create<UserState>((set) => ({
         vehicles: updatedVehicles,
         vehicle: shouldBeActive
           ? {
+              id: vehicleItem.id,
               name: vehicleItem.name,
               type: vehicleItem.type,
               seats: vehicleItem.seats,
@@ -160,6 +195,7 @@ export const useUserStore = create<UserState>((set) => ({
         vehicles: updatedVehicles,
         vehicle: activeVeh
           ? {
+              id: activeVeh.id,
               name: activeVeh.name,
               type: activeVeh.type,
               seats: activeVeh.seats,
@@ -185,6 +221,7 @@ export const useUserStore = create<UserState>((set) => ({
         vehicles: updatedVehicles,
         vehicle: activeVeh
           ? {
+              id: activeVeh.id,
               name: activeVeh.name,
               type: activeVeh.type,
               seats: activeVeh.seats,
@@ -205,6 +242,7 @@ export const useUserStore = create<UserState>((set) => ({
         vehicles: updatedVehicles,
         vehicle: activeVeh
           ? {
+              id: activeVeh.id,
               name: activeVeh.name,
               type: activeVeh.type,
               seats: activeVeh.seats,
@@ -217,5 +255,6 @@ export const useUserStore = create<UserState>((set) => ({
   logout: () =>
     set({
       isLoggedIn: false,
+      token: null,
     }),
 }));

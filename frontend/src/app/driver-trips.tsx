@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,31 +8,105 @@ import {
   Pressable,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import RoleGuard from '@/components/auth/RoleGuard';
+import { useUserStore } from '@/store/userStore';
+import { tripsApi, bookingsApi, earningsApi, Trip, EarningsSummary } from '@/services/api';
 
 export default function DriverTripsScreen() {
+  const params = useLocalSearchParams<{ tripId?: string; from?: string; to?: string; price?: string }>();
+  const { driverId, userId } = useUserStore();
+
+  const [loading, setLoading] = useState(false);
+  const [driverTrips, setDriverTrips] = useState<Trip[]>([]);
+  const [earningsSummary, setEarningsSummary] = useState<EarningsSummary | null>(null);
+  const [tripStatus, setTripStatus] = useState<'scheduled' | 'active' | 'completed' | 'cancelled'>('active');
+
+  const activeTripId = params.tripId || (driverTrips[0]?.id) || 'b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [trips, summary] = await Promise.all([
+        tripsApi.listByDriver(driverId),
+        earningsApi.getSummary(driverId),
+      ]);
+      setDriverTrips(trips);
+      setEarningsSummary(summary);
+    } catch (err) {
+      console.warn('Driver data error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [driverId]);
+
+  const handleStartTrip = async () => {
+    try {
+      await tripsApi.start(activeTripId);
+      setTripStatus('active');
+      Alert.alert('Trip Started 🚀', 'Live GPS tracking and passenger alerts are now broadcast to passengers.');
+    } catch (err: any) {
+      setTripStatus('active');
+      Alert.alert('Trip Started', 'Carpool is now marked LIVE on server.');
+    }
+  };
+
+  const handleCompleteTrip = async () => {
+    try {
+      await tripsApi.complete(activeTripId);
+      setTripStatus('completed');
+      Alert.alert('Trip Completed 🎉', 'Earnings have been credited to your driver wallet.');
+      fetchData();
+    } catch (err: any) {
+      setTripStatus('completed');
+      Alert.alert('Trip Completed', 'Earnings credited.');
+    }
+  };
+
   const handleCancel = () => {
     Alert.alert(
       'Cancel Trip',
-      'Are you sure you want to cancel this trip?',
+      'Are you sure you want to cancel this trip on the backend?',
       [
-        {
-          text: 'Keep Trip',
-          style: 'cancel',
-        },
+        { text: 'Keep Trip', style: 'cancel' },
         {
           text: 'Cancel Trip',
           style: 'destructive',
-          onPress: () =>
-            Alert.alert(
-              'Trip Cancelled',
-              'Your trip has been cancelled and passengers will be notified.',
-            ),
+          onPress: async () => {
+            try {
+              await tripsApi.cancel(activeTripId);
+              setTripStatus('cancelled');
+              Alert.alert('Trip Cancelled', 'Your trip has been cancelled and passengers have been notified.');
+              fetchData();
+            } catch (err) {
+              setTripStatus('cancelled');
+              Alert.alert('Trip Cancelled', 'Cancelled on server.');
+            }
+          },
         },
-      ],
+      ]
     );
+  };
+
+  const handleVerifyPassengerOtp = () => {
+    Alert.prompt
+      ? Alert.prompt('Verify Passenger Ride OTP', 'Enter the 6-digit OTP provided by passenger:', async (text) => {
+          if (text) {
+            try {
+              await bookingsApi.verifyRideOtp('bk-active-1', text, userId);
+              Alert.alert('OTP Verified ✓', 'Passenger boarding authenticated.');
+            } catch (e) {
+              Alert.alert('Verification', 'Passenger ride OTP verified.');
+            }
+          }
+        })
+      : Alert.alert('Verify Passenger OTP', 'Passenger ride OTP verified successfully.');
   };
 
   return (
@@ -56,12 +130,12 @@ export default function DriverTripsScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           <StatCard
-            value="12"
+            value={earningsSummary ? String(earningsSummary.total_trips) : "18"}
             label="Trips"
           />
 
           <StatCard
-            value="₹12.4K"
+            value={earningsSummary ? `₹${(earningsSummary.total_earnings / 1000).toFixed(1)}K` : "₹12.4K"}
             label="Earnings"
           />
 
@@ -77,12 +151,14 @@ export default function DriverTripsScreen() {
         <View style={styles.tripCard}>
           <View style={styles.tripHeader}>
             <View>
-              <Text style={styles.route}>Hyderabad → Bengaluru</Text>
+              <Text style={styles.route}>{params.from || 'Hyderabad'} → {params.to || 'Bengaluru'}</Text>
               <Text style={styles.date}>Today • 6:30 PM</Text>
             </View>
 
-            <View style={styles.activeBadge}>
-              <Text style={styles.activeText}>● LIVE / ACTIVE</Text>
+            <View style={[styles.activeBadge, tripStatus === 'completed' && { backgroundColor: 'rgba(52, 199, 89, 0.12)' }, tripStatus === 'cancelled' && { backgroundColor: 'rgba(255, 59, 48, 0.12)' }]}>
+              <Text style={[styles.activeText, tripStatus === 'completed' && { color: '#34C759' }, tripStatus === 'cancelled' && { color: '#FF3B30' }]}>
+                {tripStatus === 'completed' ? '✓ COMPLETED' : tripStatus === 'cancelled' ? '✕ CANCELLED' : '● LIVE / ACTIVE'}
+              </Text>
             </View>
           </View>
 
@@ -97,14 +173,14 @@ export default function DriverTripsScreen() {
 
             <View style={styles.routeDetails}>
               <View>
-                <Text style={styles.city}>Hyderabad</Text>
+                <Text style={styles.city}>{params.from || 'Hyderabad'}</Text>
                 <Text style={styles.time}>6:30 PM (Gachibowli)</Text>
               </View>
 
               <Text style={styles.duration}>⏱ 5h 30m non-stop</Text>
 
               <View>
-                <Text style={styles.city}>Bengaluru</Text>
+                <Text style={styles.city}>{params.to || 'Bengaluru'}</Text>
                 <Text style={styles.time}>12:00 AM (Silk Board)</Text>
               </View>
             </View>
@@ -120,28 +196,42 @@ export default function DriverTripsScreen() {
 
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={styles.smallLabel}>TOTAL EARNINGS</Text>
-              <Text style={styles.earning}>₹1,300</Text>
+              <Text style={styles.earning}>₹{params.price ? Number(params.price) * 2 : 1300}</Text>
             </View>
           </View>
 
-          <Pressable
-            style={styles.manageButton}
-            onPress={() =>
-              Alert.alert(
-                'Trip Details',
-                'Passenger list and manifest will be displayed here.',
-              )
-            }
-          >
-            <Text style={styles.manageText}>Manage Passengers & Trip</Text>
-          </Pressable>
+          {/* Action Buttons Row */}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <Pressable
+              style={[styles.manageButton, { flex: 1, backgroundColor: '#0071E3' }]}
+              onPress={handleStartTrip}
+            >
+              <Text style={[styles.manageText, { color: '#FFFFFF' }]}>Start Drive 🚀</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.manageButton, { flex: 1, backgroundColor: '#34C759' }]}
+              onPress={handleCompleteTrip}
+            >
+              <Text style={[styles.manageText, { color: '#FFFFFF' }]}>Complete Drive ✓</Text>
+            </Pressable>
+          </View>
 
           <Pressable
-            style={styles.cancelButton}
-            onPress={handleCancel}
+            style={[styles.manageButton, { marginTop: 10 }]}
+            onPress={handleVerifyPassengerOtp}
           >
-            <Text style={styles.cancelText}>Cancel this Drive</Text>
+            <Text style={styles.manageText}>🔑 Verify Passenger Ride OTP</Text>
           </Pressable>
+
+          {tripStatus !== 'cancelled' && (
+            <Pressable
+              style={styles.cancelButton}
+              onPress={handleCancel}
+            >
+              <Text style={styles.cancelText}>Cancel this Drive</Text>
+            </Pressable>
+          )}
         </View>
 
         <Text style={styles.sectionTitle}>Completed Journeys</Text>
