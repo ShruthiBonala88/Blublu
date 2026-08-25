@@ -381,7 +381,6 @@ export default function PassengerHomeScreen() {
               Top daily departures
             </Text>
           </View>
-
           {/* Smooth Horizontal Category Tabs */}
           <ScrollView
             horizontal
