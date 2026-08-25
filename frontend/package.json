@@ -46,6 +46,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "expo export -p web",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ../deploy.ps1",
     "export": "expo export",
     "lint": "expo lint"
   },
