@@ -1,0 +1,79 @@
+name: Continuous Integration & Deployment (CI/CD)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # ==========================================
+  # 1. BACKEND: Test & Build Go API
+  # ==========================================
+  backend-ci:
+    name: Test & Build Go Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+          cache-dependency-path: backend/go.sum
+
+      - name: Download Go Dependencies
+        run: go mod download
+
+      - name: Run Backend Unit Tests
+        run: go test -v ./...
+
+      - name: Build Go Production Binary
+        run: go build -v -ldflags="-w -s" -o blublu-server ./cmd/server
+
+  # ==========================================
+  # 2. FRONTEND: Type-Check & Build Expo Web
+  # ==========================================
+  frontend-ci:
+    name: Test & Export Expo Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Run TypeScript Type Check
+        run: npx tsc --noEmit
+
+      - name: Build Expo Web Production Bundle
+        run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL || 'https://blublu-api.onrender.com/api/v1' }}
+          EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL || 'https://blublu-api.onrender.com' }}
+
+      - name: Upload Web Dist Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-web-dist
+          path: frontend/dist/

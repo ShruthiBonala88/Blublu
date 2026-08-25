@@ -1,0 +1,48 @@
+services:
+  # ==========================================
+  # Go Backend API Service
+  # ==========================================
+  - type: web
+    name: blublu-backend-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: APP_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: blublu-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: blublu-postgres
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: blublu-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: blublu-postgres
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: blublu-postgres
+          property: database
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  - name: blublu-postgres
+    plan: free
+    region: singapore
+    databaseName: blublu
+    user: blublu_user
