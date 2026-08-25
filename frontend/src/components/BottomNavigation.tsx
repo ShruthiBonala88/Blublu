@@ -3,94 +3,102 @@ import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const TAB_BAR_BASE_HEIGHT = 56;
+
+interface NavItem {
+  key: string;
+  label: string;
+  icon: string;
+  activeIcon: string;
+  routes: string[];
+  onPress: () => void;
+}
+
 export default function BottomNavigation() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  const isSearchActive =
-    pathname === '/passenger-home' || pathname === '/search' || pathname === '/';
-  const isPublishActive = pathname === '/create-trip' || pathname === '/driver-trips';
-  const isRidesActive = pathname === '/trips';
-  const isInboxActive = pathname === '/notifications';
-  const isProfileActive =
-    pathname === '/profile' || pathname === '/edit-profile' || pathname === '/vehicles' || pathname === '/settings';
+  // Safe bottom inset — min 8 on Android, account for home indicator on iOS
+  const safeBottom = Platform.OS === 'ios'
+    ? Math.max(insets.bottom, 16)
+    : Math.max(insets.bottom, 8);
+
+  const navItems: NavItem[] = [
+    {
+      key: 'explore',
+      label: 'Explore',
+      icon: '🔍',
+      activeIcon: '🔍',
+      routes: ['/passenger-home', '/search', '/'],
+      onPress: () => router.push('/passenger-home'),
+    },
+    {
+      key: 'publish',
+      label: 'Publish',
+      icon: '⊕',
+      activeIcon: '⊕',
+      routes: ['/create-trip', '/driver-trips'],
+      onPress: () => router.push('/create-trip'),
+    },
+    {
+      key: 'rides',
+      label: 'My Rides',
+      icon: '🧳',
+      activeIcon: '🧳',
+      routes: ['/trips'],
+      onPress: () => router.push('/trips'),
+    },
+    {
+      key: 'inbox',
+      label: 'Inbox',
+      icon: '💬',
+      activeIcon: '💬',
+      routes: ['/notifications'],
+      onPress: () => router.push('/notifications'),
+    },
+    {
+      key: 'profile',
+      label: 'Profile',
+      icon: '👤',
+      activeIcon: '👤',
+      routes: ['/profile', '/edit-profile', '/vehicles', '/settings'],
+      onPress: () => router.push('/profile'),
+    },
+  ];
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 8) }]}>
-      {/* Search */}
-      <Pressable
-        style={styles.navItem}
-        onPress={() => router.push('/passenger-home')}
-      >
-        <View style={[styles.iconContainer, isSearchActive && styles.activeIconContainer]}>
-          <Text style={[styles.navIcon, isSearchActive && styles.activeIcon]}>
-            🔍
-          </Text>
-        </View>
-        <Text style={[styles.navLabel, isSearchActive && styles.activeLabel]}>
-          Explore
-        </Text>
-      </Pressable>
-
-      {/* Publish */}
-      <Pressable
-        style={styles.navItem}
-        onPress={() => router.push('/create-trip')}
-      >
-        <View style={[styles.iconContainer, isPublishActive && styles.activeIconContainer]}>
-          <Text style={[styles.navIcon, isPublishActive && styles.activeIcon]}>
-            ⊕
-          </Text>
-        </View>
-        <Text style={[styles.navLabel, isPublishActive && styles.activeLabel]}>
-          Publish
-        </Text>
-      </Pressable>
-
-      {/* Your rides */}
-      <Pressable
-        style={styles.navItem}
-        onPress={() => router.push('/trips')}
-      >
-        <View style={[styles.iconContainer, isRidesActive && styles.activeIconContainer]}>
-          <Text style={[styles.navIcon, isRidesActive && styles.activeIcon]}>
-            🧳
-          </Text>
-        </View>
-        <Text style={[styles.navLabel, isRidesActive && styles.activeLabel]}>
-          My Rides
-        </Text>
-      </Pressable>
-
-      {/* Inbox */}
-      <Pressable
-        style={styles.navItem}
-        onPress={() => router.push('/notifications')}
-      >
-        <View style={[styles.iconContainer, isInboxActive && styles.activeIconContainer]}>
-          <Text style={[styles.navIcon, isInboxActive && styles.activeIcon]}>
-            💬
-          </Text>
-        </View>
-        <Text style={[styles.navLabel, isInboxActive && styles.activeLabel]}>
-          Inbox
-        </Text>
-      </Pressable>
-
-      {/* Profile */}
-      <Pressable
-        style={styles.navItem}
-        onPress={() => router.push('/profile')}
-      >
-        <View style={[styles.iconContainer, isProfileActive && styles.activeIconContainer]}>
-          <Text style={[styles.navIcon, isProfileActive && styles.activeIcon]}>
-            👤
-          </Text>
-        </View>
-        <Text style={[styles.navLabel, isProfileActive && styles.activeLabel]}>
-          Profile
-        </Text>
-      </Pressable>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingBottom: safeBottom,
+          height: TAB_BAR_BASE_HEIGHT + safeBottom,
+        },
+      ]}
+    >
+      {navItems.map((item) => {
+        const isActive = item.routes.includes(pathname);
+        return (
+          <Pressable
+            key={item.key}
+            style={({ pressed }) => [
+              styles.navItem,
+              pressed && styles.navItemPressed,
+            ]}
+            onPress={item.onPress}
+            android_ripple={{ color: 'rgba(0, 113, 227, 0.08)', borderless: false, radius: 32 }}
+          >
+            <View style={[styles.iconPill, isActive && styles.iconPillActive]}>
+              <Text style={[styles.navIcon, isActive && styles.navIconActive]}>
+                {isActive ? item.activeIcon : item.icon}
+              </Text>
+            </View>
+            <Text style={[styles.navLabel, isActive && styles.navLabelActive]} numberOfLines={1}>
+              {item.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -98,67 +106,78 @@ export default function BottomNavigation() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 70,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#D1D1D6',
+    alignItems: 'flex-start',
     justifyContent: 'space-around',
-    paddingHorizontal: 8,
-    paddingBottom: Platform.OS === 'ios' ? 14 : 8,
+    paddingTop: 8,
+    paddingHorizontal: 4,
     ...Platform.select({
       web: {
         backdropFilter: 'saturate(180%) blur(20px)',
-        backgroundColor: 'rgba(255, 255, 255, 0.88)',
-        boxShadow: '0 -2px 14px rgba(0, 0, 0, 0.04)',
+        backgroundColor: 'rgba(255, 255, 255, 0.92)',
+        boxShadow: '0 -1px 0 rgba(0,0,0,0.08), 0 -4px 20px rgba(0,0,0,0.04)',
+        position: 'sticky',
+        bottom: 0,
       } as any,
-      default: {
-        elevation: 8,
+      ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 10,
+        shadowColor: '#000000',
       },
     }),
   },
+
   navItem: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-    ...Platform.select({
-      web: {
-        cursor: 'pointer',
-      } as any,
-      default: {},
-    }),
+    justifyContent: 'flex-start',
+    paddingTop: 2,
+    minHeight: 48,
+    ...Platform.select({ web: { cursor: 'pointer' } as any, default: {} }),
   },
-  iconContainer: {
-    width: 36,
+
+  navItemPressed: {
+    opacity: Platform.OS === 'ios' ? 0.7 : 1,
+  },
+
+  iconPill: {
+    width: 44,
     height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
-    marginBottom: 2,
+    marginBottom: 3,
   },
-  activeIconContainer: {
-    backgroundColor: 'rgba(0, 113, 227, 0.08)',
+
+  iconPillActive: {
+    backgroundColor: 'rgba(0, 113, 227, 0.1)',
   },
+
   navIcon: {
-    fontSize: 18,
-    color: '#86868B',
+    fontSize: 20,
   },
-  activeIcon: {
-    color: '#0071E3',
+
+  navIconActive: {
+    // emoji stays same, pill provides color context
   },
+
   navLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
-    color: '#86868B',
-    letterSpacing: -0.2,
+    color: '#8E8E93',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
-  activeLabel: {
+
+  navLabelActive: {
     color: '#0071E3',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
