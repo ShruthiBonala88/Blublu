@@ -15,8 +15,12 @@ ALTER TABLE bookings
 ALTER TABLE bookings
     ALTER COLUMN trip_seat_id DROP NOT NULL;
 
-ALTER TABLE bookings
-    RENAME COLUMN passenger_id TO user_id;
+DO $$ 
+BEGIN 
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'passenger_id') THEN 
+        ALTER TABLE bookings RENAME COLUMN passenger_id TO user_id; 
+    END IF; 
+END $$;
 
 -- 3. Create booking_seats table for multi-seat bookings
 CREATE TABLE IF NOT EXISTS booking_seats (

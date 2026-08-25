@@ -8,7 +8,7 @@ import { FilterBar } from './components/FilterBar';
 import { RideCard } from './components/RideCard';
 import { EmptySearchState } from './components/EmptySearchState';
 import { mockPassengerTrips, mockPopularRoutes } from './mockData';
-import { PassengerSearchFilters, PassengerTripCard } from './types';
+import { PassengerSearchFilters, PassengerTrip } from './types';
 import { colors } from '../../../theme/colors';
 import { typography } from '../../../theme/typography';
 import { tripsApi } from '../../../services/api/tripsApi';
@@ -20,30 +20,36 @@ export const PassengerSearchScreen: React.FC = () => {
   const [passengers, setPassengers] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(true);
-  const [liveTrips, setLiveTrips] = useState<PassengerTripCard[]>([]);
+  const [liveTrips, setLiveTrips] = useState<PassengerTrip[]>([]);
+  const [filters, setFilters] = useState<PassengerSearchFilters>({
+    timeOfDay: 'all',
+    sortBy: 'departure_asc',
+    vehicleType: 'all',
+    minRating: 0,
+  });
 
   const fetchLiveTrips = async (orig: string, dest: string, dateStr: string) => {
     setLoading(true);
     try {
       const res = await tripsApi.search({ origin: orig, destination: dest, date: dateStr });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        const mapped: PassengerTripCard[] = res.data.map((t: any) => ({
+        const mapped: PassengerTrip[] = res.data.map((t: any) => ({
           id: t.id,
           driverName: t.driver_name || 'Verified Driver',
           driverRating: 4.8,
-          driverPhoto: undefined,
-          vehicleMakeModel: t.vehicle_model || 'Standard Sedan',
-          vehicleType: t.vehicle_type || 'car',
-          isAc: true,
+          totalRides: 50,
+          isVerifiedDriver: true,
+          vehicleModel: t.vehicle_model || 'Standard Sedan',
+          vehicleType: t.vehicle_type || 'Sedan',
           origin: t.origin_name || orig,
           destination: t.destination_name || dest,
           departureIso: t.departure_time || new Date().toISOString(),
-          departureTimeText: '10:00 AM',
-          estimatedDurationText: '3h 30m',
+          departureTime: '10:00 AM',
+          arrivalTime: '02:00 PM',
+          duration: '4h 00m',
           availableSeats: t.available_seats || 4,
           totalSeats: 4,
           pricePerSeat: t.price_per_seat || 350,
-          genderPreference: 'any',
         }));
         setLiveTrips(mapped);
       } else {

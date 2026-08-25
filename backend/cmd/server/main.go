@@ -70,6 +70,11 @@ func main() {
 	} else {
 		defer db.Close()
 		fmt.Println("✅ PostgreSQL connected successfully")
+		if migErr := database.AutoMigrate(context.Background(), db); migErr != nil {
+			fmt.Printf("⚠️  Migration warning: %v\n", migErr)
+		} else {
+			fmt.Println("✅ Database schema is up-to-date")
+		}
 	}
 
 	redisClient, err := database.NewRedisClient(cfg.RedisURL)
