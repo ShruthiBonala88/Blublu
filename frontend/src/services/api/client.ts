@@ -4,20 +4,12 @@ import Constants from 'expo-constants';
 import { useUserStore } from '@/store/userStore';
 
 const getBaseURL = () => {
-  // 1. If explicit env variable is set and not an unreachable hardcoded LAN IP when on web
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    if (Platform.OS === 'web' && process.env.EXPO_PUBLIC_API_URL.includes('172.')) {
-      return 'http://localhost:8080/api/v1';
-    }
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-
-  // 2. On Web Browser
+  // 1. On Web Browser: direct localhost
   if (Platform.OS === 'web') {
     return 'http://localhost:8080/api/v1';
   }
 
-  // 3. On Physical Mobile Device (Expo Go): Dynamically get computer IP from Expo Host URI
+  // 2. On Physical Mobile (Expo Go) / Emulator: Extract computer IP from Expo host URI
   const hostUri =
     Constants.expoConfig?.hostUri ||
     (Constants as any).manifest?.debuggerHost ||
@@ -31,8 +23,18 @@ const getBaseURL = () => {
     }
   }
 
-  // 4. Emulators fallback
-  return Platform.OS === 'android' ? 'http://10.0.2.2:8080/api/v1' : 'http://localhost:8080/api/v1';
+  // 3. If environment variable is set
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    const envUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+      const fallbackHost = Platform.OS === 'android' ? '10.0.2.2' : '192.168.0.149';
+      return envUrl.replace(/localhost|127\.0\.0\.1/, fallbackHost);
+    }
+    return envUrl;
+  }
+
+  // 4. Default Android emulator / Local Wi-Fi IP
+  return Platform.OS === 'android' ? 'http://10.0.2.2:8080/api/v1' : 'http://192.168.0.149:8080/api/v1';
 };
 
 export const api = axios.create({
@@ -40,7 +42,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 8000,
 });
 
 // Auto-inject JWT Token from store into Authorization header
