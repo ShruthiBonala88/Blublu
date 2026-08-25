@@ -24,7 +24,29 @@ html, body, #root {
 
   /* Prevent horizontal overflow on mobile */
   overflow-x: hidden;
-  max-width: 100vw;
+}
+
+/* On Desktop browsers: center as an Apple-grade clean mobile app frame */
+@media (min-width: 500px) {
+  body {
+    background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 0;
+  }
+
+  #root {
+    max-width: 440px;
+    height: 94vh;
+    min-height: 780px;
+    border-radius: 40px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #2C2C2E, 0 0 0 11px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    position: relative;
+    background-color: #F5F5F7;
+  }
 }
 
 /* RN Web flex roots can otherwise keep an intrinsic desktop width on narrow screens. */

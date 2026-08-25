@@ -118,8 +118,11 @@ const styles = StyleSheet.create({
         backdropFilter: 'saturate(180%) blur(20px)',
         backgroundColor: 'rgba(255, 255, 255, 0.92)',
         boxShadow: '0 -1px 0 rgba(0,0,0,0.08), 0 -4px 20px rgba(0,0,0,0.04)',
-        position: 'sticky',
+        position: 'fixed',
         bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
       } as any,
       ios: {
         shadowColor: '#000000',

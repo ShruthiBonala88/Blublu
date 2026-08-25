@@ -70,7 +70,7 @@ export default function SplashScreen() {
           <Text style={styles.taglineText}>Travel together. Go further.</Text>
 
           <View style={styles.subBadge}>
-            <Text style={styles.subBadgeText}>INDIA'S SMARTEST CARPOOL NETWORK</Text>
+            <Text style={styles.subBadgeText}>{"INDIA'S SMARTEST CARPOOL NETWORK"}</Text>
           </View>
         </Animated.View>
 
