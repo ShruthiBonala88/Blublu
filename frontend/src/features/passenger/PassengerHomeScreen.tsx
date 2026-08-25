@@ -139,41 +139,41 @@ export default function PassengerHomeScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
       >
 
-        {/* ================= HERO 1: BLUBLU PRO ================= */}
-        <View style={[styles.heroDarkContainer, { paddingVertical: isDesktop ? 72 : isTablet ? 48 : 32, paddingHorizontal: hPad }]}>
-          <View style={[styles.heroDarkContent, { maxWidth: isDesktop ? 1100 : isTablet ? 800 : '100%' }]}>
+        {/* ================= HERO 1: CLEAN FROSTED HERO ================= */}
+        <View style={[styles.heroGlassContainer, { paddingVertical: isDesktop ? 60 : isTablet ? 40 : 28, paddingHorizontal: hPad }]}>
+          <View style={[styles.heroGlassContent, { maxWidth: isDesktop ? 1100 : isTablet ? 800 : '100%' }]}>
             <View style={styles.proPillBadge}>
-              <Text style={styles.proPillBadgeText}>BLUBLU PRO</Text>
+              <Text style={styles.proPillBadgeText}>⚡ BLUBLU SMART CARPOOL</Text>
             </View>
 
             <Text
               style={[
-                styles.heroDarkTitle,
+                styles.heroGlassTitle,
                 {
-                  fontSize: isDesktop ? 48 : isTablet ? 36 : isSmallMobile ? 24 : 30,
-                  lineHeight: isDesktop ? 56 : isTablet ? 44 : isSmallMobile ? 32 : 38,
+                  fontSize: isDesktop ? 44 : isTablet ? 34 : isSmallMobile ? 24 : 28,
+                  lineHeight: isDesktop ? 52 : isTablet ? 42 : isSmallMobile ? 32 : 36,
                 },
               ]}
             >
-              Titanium standard.{'\n'}Zero surge pricing.
+              Travel together.{'\n'}Clean, verified & transparent.
             </Text>
             <Text
               style={[
-                styles.heroDarkSubtitle,
+                styles.heroGlassSubtitle,
                 {
-                  fontSize: isDesktop ? 17 : isTablet ? 15 : isSmallMobile ? 13 : 14,
-                  lineHeight: isDesktop ? 26 : 22,
-                  maxWidth: isDesktop ? 700 : isTablet ? 520 : '100%',
+                  fontSize: isDesktop ? 16 : isTablet ? 15 : isSmallMobile ? 13 : 14,
+                  lineHeight: isDesktop ? 25 : 22,
+                  maxWidth: isDesktop ? 680 : isTablet ? 520 : '100%',
                 },
               ]}
             >
-              India{'\''}s premier intercity carpooling network with 100% verified EV fleets and transparent cost splitting.
+              India{"'"}s premier intercity carpooling network with 100% verified rides, EV fleets, and zero dynamic surge pricing.
             </Text>
 
             {/* CTA Buttons */}
             <View
               style={[
-                styles.heroDarkCtaRow,
+                styles.heroGlassCtaRow,
                 { flexDirection: isSmallMobile ? 'column' : 'row', alignItems: isSmallMobile ? 'stretch' : 'center' },
               ]}
             >
@@ -189,7 +189,7 @@ export default function PassengerHomeScreen() {
                 style={[styles.appleGlassPill, isSmallMobile && { flex: 1, justifyContent: 'center' }]}
                 onPress={() => router.push('/safety')}
               >
-                <Text style={styles.appleGlassPillText}>Learn about Safety ›</Text>
+                <Text style={styles.appleGlassPillText}>Trust & Safety ›</Text>
               </Pressable>
             </View>
 
@@ -677,48 +677,52 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 
-  /* ── HERO DARK ── */
-  heroDarkContainer: {
-    backgroundColor: '#000000',
+  /* ── HERO GLASS ── */
+  heroGlassContainer: {
+    backgroundColor: '#F5F5F7',
     alignItems: 'center',
     justifyContent: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0, 0, 0, 0.08)',
   },
 
-  heroDarkContent: {
+  heroGlassContent: {
     alignItems: 'center',
   },
 
   proPillBadge: {
-    backgroundColor: '#2997FF',
-    paddingVertical: 5,
-    paddingHorizontal: 14,
+    backgroundColor: 'rgba(0, 113, 227, 0.08)',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
     borderRadius: 9999,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 113, 227, 0.15)',
   },
 
   proPillBadgeText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 0.7,
+    color: '#0071E3',
+    letterSpacing: 0.6,
   },
 
-  heroDarkTitle: {
+  heroGlassTitle: {
     fontWeight: '900',
-    color: '#F5F5F7',
+    color: '#1D1D1F',
     textAlign: 'center',
     letterSpacing: -1.2,
     marginBottom: 12,
   },
 
-  heroDarkSubtitle: {
-    color: '#A1A1A6',
+  heroGlassSubtitle: {
+    color: '#6E6E73',
     textAlign: 'center',
     letterSpacing: -0.2,
     marginBottom: 24,
   },
 
-  heroDarkCtaRow: {
+  heroGlassCtaRow: {
     justifyContent: 'center',
     gap: 10,
     width: '100%',
@@ -736,12 +740,12 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        boxShadow: '0 4px 22px rgba(0, 113, 227, 0.45)',
+        boxShadow: '0 4px 18px rgba(0, 113, 227, 0.35)',
       } as any,
       default: {
         shadowColor: '#0071E3',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.35,
         shadowRadius: 10,
         elevation: 4,
       },
@@ -758,35 +762,41 @@ const styles = StyleSheet.create({
   pillArrow: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 
   appleGlassPill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 9999,
     paddingVertical: 13,
     paddingHorizontal: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    ...Platform.select({ web: { cursor: 'pointer' } as any, default: {} }),
-  },
-
-  appleGlassPillText: { color: '#2997FF', fontSize: 14, fontWeight: '700' },
-
-  /* ── SEARCH DOCK ── */
-  searchGlassDock: {
-    backgroundColor: 'rgba(29, 29, 31, 0.94)',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: '#D2D2D7',
     ...Platform.select({
       web: {
-        backdropFilter: 'blur(30px)',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+        cursor: 'pointer',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+      } as any,
+      default: {},
+    }),
+  },
+
+  appleGlassPillText: { color: '#1D1D1F', fontSize: 14, fontWeight: '700' },
+
+  /* ── SEARCH DOCK (FROSTED GLASS) ── */
+  searchGlassDock: {
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'saturate(180%) blur(20px)',
+        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.07)',
       } as any,
       default: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
-        shadowRadius: 20,
-        elevation: 8,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 4,
       },
     }),
   },
@@ -795,15 +805,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
     flexWrap: 'wrap',
     gap: 6,
   },
 
   searchGlassHeaderTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#F5F5F7',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1D1D1F',
     letterSpacing: -0.2,
     flexShrink: 1,
   },
@@ -812,38 +822,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(52, 199, 89, 0.15)',
+    backgroundColor: 'rgba(52, 199, 89, 0.12)',
     paddingVertical: 3,
     paddingHorizontal: 9,
     borderRadius: 9999,
   },
 
   liveIndicatorDot: { fontSize: 7, color: '#34C759' },
-  liveIndicatorText: { fontSize: 10, fontWeight: '700', color: '#34C759' },
+  liveIndicatorText: { fontSize: 10, fontWeight: '800', color: '#34C759' },
 
   searchFieldsRow: {
     flexDirection: 'column',
-    gap: 8,
+    gap: 10,
   },
 
   searchFieldsRowDesktop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
 
   searchFieldBox: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.09)',
-    borderRadius: 14,
+    backgroundColor: '#F5F5F7',
+    borderRadius: 16,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     gap: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    minHeight: 48,
+    borderColor: '#E5E5EA',
+    minHeight: 52,
   },
 
   blueDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#0071E3', flexShrink: 0 },
@@ -851,50 +861,70 @@ const styles = StyleSheet.create({
   searchFieldInputCol: { flex: 1 },
 
   searchMicroLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '800',
     color: '#86868B',
     letterSpacing: 0.6,
   },
 
   searchTextInput: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: '#1D1D1F',
+    fontSize: 15,
     fontWeight: '600',
     marginTop: 2,
     padding: 0,
-    minHeight: 20,
+    minHeight: 22,
   },
 
   swapCircleBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     flexShrink: 0,
-    ...Platform.select({ web: { cursor: 'pointer' } as any, default: {} }),
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+      } as any,
+      default: {},
+    }),
   },
 
-  swapCircleIcon: { color: '#2997FF', fontSize: 14, fontWeight: '800' },
+  swapCircleIcon: { color: '#0071E3', fontSize: 14, fontWeight: '800' },
 
   dockSearchBtn: {
     backgroundColor: '#0071E3',
-    borderRadius: 14,
-    paddingVertical: 13,
-    paddingHorizontal: 20,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    minHeight: 48,
-    ...Platform.select({ web: { cursor: 'pointer' } as any, default: {} }),
+    minHeight: 52,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        boxShadow: '0 4px 14px rgba(0, 113, 227, 0.3)',
+      } as any,
+      default: {
+        shadowColor: '#0071E3',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 3,
+      },
+    }),
   },
 
-  dockSearchBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
-  dockSearchBtnArrow: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  dockSearchBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  dockSearchBtnArrow: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 
   /* ── HERO LIGHT ── */
   heroLightContainer: {
