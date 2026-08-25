@@ -319,7 +319,10 @@ export default function PassengerHomeScreen() {
 
           <View style={[styles.bentoGrid, (isDesktop || isTablet) ? styles.bentoGridWide : null]}>
             {/* Bento Card 1 */}
-            <View style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}>
+            <Pressable
+              style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}
+              onPress={() => router.push({ pathname: '/search', params: { from: 'Hyderabad', to: 'Bengaluru' } })}
+            >
               <View style={styles.bentoIconBadge}>
                 <Text style={styles.bentoIcon}>💎</Text>
               </View>
@@ -328,10 +331,13 @@ export default function PassengerHomeScreen() {
                 100% transparent cost splitting. No dynamic surge pricing, no unexpected booking surcharges.
               </Text>
               <Text style={styles.bentoCardLink}>Calculate route fare ›</Text>
-            </View>
+            </Pressable>
 
             {/* Bento Card 2 */}
-            <View style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}>
+            <Pressable
+              style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}
+              onPress={() => router.push('/safety')}
+            >
               <View style={[styles.bentoIconBadge, { backgroundColor: 'rgba(52, 199, 89, 0.12)' }]}>
                 <Text style={styles.bentoIcon}>🛡️</Text>
               </View>
@@ -340,10 +346,13 @@ export default function PassengerHomeScreen() {
                 Mandatory Government ID and Driving License verification for every driver and co-passenger.
               </Text>
               <Text style={[styles.bentoCardLink, { color: '#34C759' }]}>Trust standards ›</Text>
-            </View>
+            </Pressable>
 
             {/* Bento Card 3 */}
-            <View style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}>
+            <Pressable
+              style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}
+              onPress={() => router.push('/help')}
+            >
               <View style={[styles.bentoIconBadge, { backgroundColor: 'rgba(245, 99, 0, 0.12)' }]}>
                 <Text style={styles.bentoIcon}>⚡</Text>
               </View>
@@ -352,10 +361,13 @@ export default function PassengerHomeScreen() {
                 Powered by IndiaStack. Cancel anytime with immediate automated UPI settlement back to your bank.
               </Text>
               <Text style={[styles.bentoCardLink, { color: '#F56300' }]}>Refund policy ›</Text>
-            </View>
+            </Pressable>
 
             {/* Bento Card 4 */}
-            <View style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}>
+            <Pressable
+              style={[styles.bentoCard, (isDesktop || isTablet) && styles.bentoCardHalf]}
+              onPress={() => router.push({ pathname: '/search', params: { filter: 'women' } })}
+            >
               <View style={[styles.bentoIconBadge, { backgroundColor: 'rgba(175, 82, 222, 0.12)' }]}>
                 <Text style={styles.bentoIcon}>👥</Text>
               </View>
@@ -364,7 +376,7 @@ export default function PassengerHomeScreen() {
                 Option to choose verified female drivers and co-travelers for complete peace of mind on night trips.
               </Text>
               <Text style={[styles.bentoCardLink, { color: '#AF52DE' }]}>Explore women pools ›</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
 
@@ -1039,7 +1051,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#D1D1D6',
     ...Platform.select({
-      web: { boxShadow: '0 4px 18px rgba(0, 0, 0, 0.05)' } as any,
+      web: {
+        cursor: 'pointer',
+        boxShadow: '0 4px 18px rgba(0, 0, 0, 0.05)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      } as any,
       default: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
