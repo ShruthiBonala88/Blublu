@@ -607,6 +607,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
     ...Platform.select({ web: { cursor: 'pointer' } as any, default: {} }),
   },
 
@@ -626,6 +627,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1D1D1F',
     letterSpacing: -0.4,
+    flexShrink: 1,
   },
 
   appleNavLinksRow: {
@@ -804,6 +806,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#F5F5F7',
     letterSpacing: -0.2,
+    flexShrink: 1,
   },
 
   liveIndicatorPill: {
@@ -1000,6 +1003,7 @@ const styles = StyleSheet.create({
 
   bentoCard: {
     width: '100%',
+    minWidth: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 20,
@@ -1107,6 +1111,7 @@ const styles = StyleSheet.create({
 
   routeCard: {
     width: '100%',
+    minWidth: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 16,
