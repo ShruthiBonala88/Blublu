@@ -11,7 +11,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body, #root {
+html, body {
   margin: 0;
   padding: 0;
   background-color: #F5F5F7;
@@ -21,35 +21,18 @@ html, body, #root {
   width: 100%;
   min-width: 0;
   min-height: 100%;
-
-  /* Prevent horizontal overflow on mobile */
   overflow-x: hidden;
 }
 
-/* On Desktop browsers: center as an Apple-grade clean mobile app frame */
-@media (min-width: 500px) {
-  body {
-    background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px 0;
-  }
-
-  #root {
-    max-width: 440px;
-    height: 94vh;
-    min-height: 780px;
-    border-radius: 40px;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #2C2C2E, 0 0 0 11px rgba(255, 255, 255, 0.1);
-    overflow: hidden;
-    position: relative;
-    background-color: #F5F5F7;
-  }
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #F5F5F7;
 }
 
-/* RN Web flex roots can otherwise keep an intrinsic desktop width on narrow screens. */
+/* RN Web flex roots */
 body > div {
   width: 100%;
   min-width: 0;
@@ -71,8 +54,7 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Prevent iOS Safari from zooming on input focus — inputs need ≥16px font-size.
-   !important overrides React Native Web's injected class-level font: 14px style. */
+/* Prevent iOS Safari from zooming on input focus */
 input, select, textarea {
   font-size: 16px !important;
 }
@@ -95,6 +77,3 @@ input, select, textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
 }
-
-/* Safe area CSS variables — used by react-native-safe-area-context under the hood.
-   viewport-fit=cover (set in +html.tsx) enables these env() values on iOS Safari. */
