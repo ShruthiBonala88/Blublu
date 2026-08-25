@@ -38,17 +38,13 @@ export default function SplashScreen() {
       } else {
         router.replace('/login');
       }
-    }, 1800);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [fadeAnim, scaleAnim, isLoggedIn, token]);
 
   const handleLogin = () => {
     router.replace('/login');
-  };
-
-  const handleExplore = () => {
-    router.replace('/passenger-home');
   };
 
   return (
@@ -81,15 +77,11 @@ export default function SplashScreen() {
         {/* Bottom Actions */}
         <Animated.View style={[styles.bottomContainer, { opacity: fadeAnim }]}>
           <Pressable style={styles.primaryButton} onPress={handleLogin}>
-            <Text style={styles.primaryButtonText}>Sign In / Create Account</Text>
+            <Text style={styles.primaryButtonText}>Get Started • Sign In / Register</Text>
             <Text style={styles.arrowIcon}>→</Text>
           </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={handleExplore}>
-            <Text style={styles.secondaryButtonText}>Browse as Guest</Text>
-          </Pressable>
-
-          <Text style={styles.termsNote}>Designed with Apple HIG Aesthetics</Text>
+          <Text style={styles.termsNote}>Verified Mobility Powered by BLUBLU</Text>
         </Animated.View>
       </View>
     </View>

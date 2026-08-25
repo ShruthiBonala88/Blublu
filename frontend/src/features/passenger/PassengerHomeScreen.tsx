@@ -13,8 +13,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import BottomNavigation from '@/components/BottomNavigation';
+import { useUserStore } from '@/store/userStore';
 
 export default function PassengerHomeScreen() {
+  const { isLoggedIn, token } = useUserStore();
+
+  React.useEffect(() => {
+    if (!isLoggedIn || !token) {
+      router.replace('/login');
+    }
+  }, [isLoggedIn, token]);
+
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
   const isTablet = width >= 640 && width < 1024;

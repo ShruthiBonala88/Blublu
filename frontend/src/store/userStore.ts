@@ -65,19 +65,19 @@ const DEFAULT_VEHICLE_ID = 'c7a3a334-a088-4dd3-97c5-d5c7b8c7a1c9';
 
 export const useUserStore = create<UserState>((set) => ({
   role: 'passenger',
-  phone: '+91 98765 43210',
-  isLoggedIn: true,
-  token: 'blublu-mock-dev-jwt-token',
-  userId: DEFAULT_USER_ID,
-  driverId: DEFAULT_DRIVER_ID,
+  phone: '',
+  isLoggedIn: false,
+  token: null,
+  userId: '',
+  driverId: '',
 
-  passengerName: 'Vaishnavi',
-  passengerPhone: '+91 98765 43210',
-  passengerEmail: 'vaishnavi@example.com',
+  passengerName: '',
+  passengerPhone: '',
+  passengerEmail: '',
 
-  driverName: 'BLUBLU Driver',
-  driverPhone: '+91 98765 43210',
-  driverEmail: 'driver@blublu.com',
+  driverName: '',
+  driverPhone: '',
+  driverEmail: '',
 
   vehicle: {
     id: DEFAULT_VEHICLE_ID,

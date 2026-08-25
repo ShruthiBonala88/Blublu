@@ -229,21 +229,6 @@ export default function LoginScreen() {
                 We will send a 6-digit one-time verification code to your {mode === 'phone' ? 'phone number via SMS' : 'email inbox'}.
               </Text>
             </View>
-
-            {/* Skip / Guest Explore */}
-            <Pressable
-              style={{
-                marginTop: 18,
-                paddingVertical: 10,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onPress={() => router.replace('/passenger-home')}
-            >
-              <Text style={{ fontSize: 13, color: '#86868B', fontWeight: '600' }}>
-                Skip for now • <Text style={{ color: '#0071E3', fontWeight: '700' }}>Explore as Guest ›</Text>
-              </Text>
-            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
