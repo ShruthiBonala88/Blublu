@@ -37,6 +37,19 @@ services:
       - key: JWT_SECRET
         generateValue: true
 
+  # ==========================================
+  # React Native / Expo Web Frontend Static Site
+  # ==========================================
+  - type: web
+    name: blublu-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build:web
+    staticPublishPath: ./frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
 databases:
   # ==========================================
   # PostgreSQL Database
@@ -46,3 +59,4 @@ databases:
     region: singapore
     databaseName: blublu
     user: blublu_user
+
