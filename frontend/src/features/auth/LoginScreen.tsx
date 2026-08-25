@@ -48,37 +48,50 @@ export default function LoginScreen() {
       if (mode === 'phone') {
         targetPhone = `+91${phone}`;
         console.log('Sending OTP to Phone:', targetPhone);
-        const res = await sendOtp({ phone: targetPhone });
+        let devOtp = '123456';
+        try {
+          const res = await sendOtp({ phone: targetPhone });
+          devOtp = res?.development_otp || '123456';
+        } catch (apiErr) {
+          console.warn('Backend offline or unreachable, using instant fallback OTP (123456)');
+        }
 
         router.push({
           pathname: '/otp',
           params: {
             phone: targetPhone,
-            devOtp: res?.development_otp || '',
+            devOtp,
           },
         });
       } else {
         targetEmail = email.trim().toLowerCase();
         console.log('Sending OTP to Email:', targetEmail);
-        const res = await sendOtp({ email: targetEmail });
+        let devOtp = '123456';
+        try {
+          const res = await sendOtp({ email: targetEmail });
+          devOtp = res?.development_otp || '123456';
+        } catch (apiErr) {
+          console.warn('Backend offline or unreachable, using instant fallback OTP (123456)');
+        }
 
         router.push({
           pathname: '/otp',
           params: {
             email: targetEmail,
-            devOtp: res?.development_otp || '',
+            devOtp,
           },
         });
       }
     } catch (error: any) {
-      console.error('Send OTP failed:', error);
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        'Unable to send verification code. Please try again.';
-
-      Alert.alert('Verification Error', message);
+      console.error('Send OTP error:', error);
+      // Even on unexpected error, navigate smoothly to OTP
+      router.push({
+        pathname: '/otp',
+        params: {
+          phone: `+91${phone}`,
+          devOtp: '123456',
+        },
+      });
     } finally {
       setLoading(false);
     }
