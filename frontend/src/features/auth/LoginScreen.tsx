@@ -427,6 +427,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1D1D1F',
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+        outlineWidth: 0,
+      } as any,
+      default: {},
+    }),
   },
   continueButton: {
     backgroundColor: '#0071E3',

@@ -54,9 +54,24 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Prevent iOS Safari from zooming on input focus */
-input, select, textarea {
+/* Prevent iOS Safari from zooming on input focus & eliminate browser black focus box */
+input, select, textarea, [contenteditable="true"] {
   font-size: 16px !important;
+  outline: none !important;
+  outline-style: none !important;
+  outline-width: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+input:focus, select:focus, textarea:focus, [contenteditable="true"]:focus {
+  outline: none !important;
+  outline-style: none !important;
+  outline-width: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Apple blur and scrollbar polish */
