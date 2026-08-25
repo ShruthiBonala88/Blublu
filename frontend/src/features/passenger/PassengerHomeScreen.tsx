@@ -347,13 +347,7 @@ export default function PassengerHomeScreen() {
                 Top daily departures
               </Text>
             </View>
-            <Pressable
-              onPress={() => router.push('/search')}
-              style={styles.seeAllBtn}
-              hitSlop={8}
-            >
-              <Text style={styles.seeAllLink}>Explore all 50+ ›</Text>
-            </Pressable>
+
           </View>
 
           {/* Smooth Horizontal Category Tabs */}
